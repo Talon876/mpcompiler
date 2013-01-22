@@ -20,8 +20,9 @@ public class Line {
 	 * 
 	 * @param curIdx
 	 *            starting index
-	 * @param lineWrap
-	 *            if true if necessary it will check new line(s).
+	 * @param skipWhiteSpace
+	 *            if true ignores whitespace while determining the next
+	 *            character index
 	 * @return index of the next character
 	 * @throws NoCharException
 	 *             if the line does not have any characters left matching the
