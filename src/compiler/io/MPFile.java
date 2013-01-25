@@ -8,8 +8,8 @@ import java.util.HashMap;
 public class MPFile {
 
     private HashMap<Integer, Line> lines = new HashMap<Integer, Line>();
-    private int curLine; // 1-based
-    private int curCol; // 1-based
+
+    private int lineIndex = 1; // 1-based
 
     /**
      * Adds a line to the file and maps it to the next line number
@@ -20,70 +20,64 @@ public class MPFile {
         lines.put(lines.size() + 1, line);
     }
 
-    public Line getLine(int number) {
-        getNextChar(true, false);
+    public Line getLineAt(int number) {
         return lines.get(number);
     }
 
-    /**
-     * Gets the next character in the file. Advances the column and/or line indices. Will return a EOF if it reaches the end of the file.
-     * 
-     * @param skipWhiteSpace
-     *            - if true the next character ignores whitespace since the previous character.
-     * @param lineWrap
-     *            if true if necessary it will check new line(s).
-     * 
-     * @return the next character in the file
-     * @throws NoCharException
-     *             if there are no matching characters left and lineWrap is false, should not be thrown at the end of the file
-     */
-    public char getNextChar(boolean skipWhiteSpace, boolean lineWrap)
-            throws NoCharException {
-        // Line tmpLine = lines.get(curLine);
-        // int tmpIdx = tmpLine.getNextCharIdx(curCol - 1, skipWhiteSpace);
-        // char tmpChar = tmpLine.getChar(tmpIdx);
-        // TODO: add line wrapping
-        // curCol = tmpIdx + 1 //convert index to 1 based
-        return ' ';
+    public char getCurrentCharacter() {
+        return getCurrentLine().getCurrentCharacter();
+    }
+
+    //    /**
+    //     * Finds a useful character by skipping whitespace but not new lines
+    //     *
+    //     * @return current character if its useful, else the next useful character
+    //     */
+    //    public char getUsefulCharacter() {
+    //        char usefulChar = 0;
+    //
+    //        if (!WhiteSpace.isWhitespace(getCurrentCharacter())) { //if not whitespace, return self
+    //            usefulChar = getCurrentCharacter();
+    //        } else { //current character is whitespace (not useful), find next useful character
+    //            while (WhiteSpace.isWhitespace(getCurrentCharacter())) {
+    //                //getCurrentCharacter()
+    //            }
+    //        }
+    //
+    //        return usefulChar;
+    //    }
+
+    public boolean hasNextChar() {
+        //        boolean lastline = lineIndex > lines.size();
+        //        System.out.println("lineIndex: " + lineIndex + " > " + lines.size() + " = " + lastline);
+        //        if (lastline) {
+        //            return false;
+        //        }
+        //        if (getCurrentLine() == null) {
+        //            System.out.println("current line is null");
+        //        }
+        return getCurrentLine().hasNextChar();
+    }
+
+
+    public boolean hasNextLine() {
+        return lineIndex < lines.size();
+    }
+
+    public char getNextCharacter() {
+        return getCurrentLine().getNextChar();
+    }
+
+    public void increaseLineIndex() {
+        lineIndex++;
     }
 
     /**
-     * Returns if the file contains more characters. Does not advance the line or column indices.
      * 
-     * @param skipWhiteSpace
-     *            if true the next character ignores whitespace since the previous character.
-     * @param lineWrap
-     *            if true if necessary it will check new line(s).
-     * 
-     * @return true if and only if there are characters left matching the parameters
+     * @return true if this is the last line; false otherwise
      */
-    public boolean hasNextChar(boolean skipWhiteSpace, boolean lineWrap) {
-        // Line tmpLine = lines.get(curLine);
-        // int tmpIdx = tmpLine.getNextCharIdx(curCol, skipWhiteSpace);
-        // TODO: add line wrapping
-        // return true
-        return false;
-    }
-
-    /**
-     * Peeks at the next character in the file. Does not advance the line or column indices. Will return a EOF if it reaches the end of the
-     * file.
-     * 
-     * @param skipWhiteSpace
-     *            if true the next character ignores whitespace since the previous character.
-     * @param lineWrap
-     *            if true if necessary it will check new line(s).
-     * 
-     * @return the next character in the file.
-     * @throws NoCharException
-     *             if there are no matching characters left and lineWrap is false, is not thrown at end of the file
-     */
-    public char peek(boolean skipWhiteSpace, boolean lineWrap) {
-        // Line tmpLine = lines.get(curLine);
-        // int tmpIdx = tmpLine.getNextCharIdx(curCol, skipWhiteSpace);
-        // TODO: add line wrapping
-        // return tmpLine.getChar(tmpIdx);
-        return ' ';
+    public boolean isOnLastLine() {
+        return lineIndex >= lines.size();
     }
 
     /**
@@ -101,5 +95,25 @@ public class MPFile {
             }
 
         }
+    }
+
+    /**
+     * 
+     * @return the line at the current line index
+     */
+    public Line getCurrentLine() {
+        return lines.get(lineIndex);
+    }
+
+    public int getColumnIndex() {
+        return getCurrentLine().getColumnIndex();
+    }
+
+    public int getLineIndex() {
+        return lineIndex;
+    }
+
+    public int numberOfLines() {
+        return lines.size();
     }
 }
