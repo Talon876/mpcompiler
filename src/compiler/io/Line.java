@@ -33,7 +33,7 @@ public class Line {
     public char getCurrentCharacter() {
         return getCharAt(columnIndex - 1);
     }
-
+    
     /**
      * 
      * @return the full line as a string without a newline character

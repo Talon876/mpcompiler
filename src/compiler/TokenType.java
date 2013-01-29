@@ -25,8 +25,11 @@ public enum TokenType {
     MP_RUN_STRING,
     MP_ERROR,
 
-    MP_WHITESPACE
+    //Whitespace
+    MP_WHITESPACE,
 
+    //Comment
+    MP_COMMENT
     // A comment in MP starts with { and ends with }
     // I am not sure if they are tokens or not?
 }

@@ -21,7 +21,18 @@ public class MP {
                 ArrayList<Token> tokens = s.getTokens();
                 //print tokens to token file
                 for (Token t : tokens) {
-                    System.out.println(t.toString());
+                	switch(t.getType())
+                	{
+                	case MP_RUN_COMMENT:
+                		System.out.println("MP_RUN_COMMENT\t"
+        						+ t.getLineNumber() + "\t"
+        						+ t.getColumnNumber());
+                		break;
+                	default:
+                		System.out.println(t.toString());
+                		break;
+                	}
+                    
                 }
 
             } else {

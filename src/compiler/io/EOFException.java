@@ -2,7 +2,12 @@ package compiler.io;
 
 public class EOFException extends RuntimeException {
 
-    public EOFException() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3555020798813927485L;
+
+	public EOFException() {
 
     }
 
