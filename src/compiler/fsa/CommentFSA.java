@@ -48,7 +48,8 @@ public class CommentFSA implements FSA {
                             file.getNextCharacter(true);
                             state = 3;
                         } else if (current == '{') {
-                            System.out.println("WARNING: { found inside comment, double check comments");
+                            System.out.println("WARNING: { found inside comment, double check comments. Found at line "
+                                    + file.getLineIndex() + " column " + file.getColumnIndex());
                             lexeme += file.getNextCharacter(true);
                         } else {
                             lexeme += file.getNextCharacter(true);

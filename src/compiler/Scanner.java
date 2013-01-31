@@ -64,6 +64,13 @@ public class Scanner {
                         + currentToken.getColumnNumber());
                 tokens.add(currentToken);
 
+            } else if (currentToken.getType() == TokenType.MP_ERROR) {
+                System.err.println("MP_ERROR: Found invalid first character in token. Token found starting at line "
+                        + currentToken.getLineNumber() + " column " + currentToken.getColumnNumber());
+            } else if (currentToken.getType() == TokenType.MP_RUN_STRING) {
+                System.err
+                .println("MP_RUN_STRING: String literal is not properly closed by a single-quote. String found starting at line "
+                        + currentToken.getLineNumber() + " column " + currentToken.getColumnNumber());
             } else if (currentToken.getType() != TokenType.MP_WHITESPACE
                     && currentToken.getType() != TokenType.MP_COMMENT) {
                 tokens.add(currentToken);
@@ -191,9 +198,7 @@ public class Scanner {
                 //                        + tokenFinder.getClass().getName());
                 foundToken = tokenFinder.getToken(file);
 
-
             } else {
-                System.out.println("Found an MP_ERROR");
                 nextChar = file.getNextCharacter(); //consume the error char
                 foundToken = new Token(TokenType.MP_ERROR, "" + nextChar, file.getLineIndex(),
                         file.getColumnIndex() - 1);
