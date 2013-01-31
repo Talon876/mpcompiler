@@ -39,7 +39,6 @@ public class Scanner {
             }
 
             file.print(true);
-            System.out.println("start");
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -64,6 +63,7 @@ public class Scanner {
                         + currentToken.getLineNumber() + " column "
                         + currentToken.getColumnNumber());
                 tokens.add(currentToken);
+
             } else if (currentToken.getType() != TokenType.MP_WHITESPACE
                     && currentToken.getType() != TokenType.MP_COMMENT) {
                 tokens.add(currentToken);
@@ -187,8 +187,8 @@ public class Scanner {
             }
 
             if (tokenFinder != null) {
-                System.out.println("looking for token with : "
-                        + tokenFinder.getClass().getName());
+                //                System.out.println("looking for token with : "
+                //                        + tokenFinder.getClass().getName());
                 foundToken = tokenFinder.getToken(file);
 
 

@@ -127,7 +127,6 @@ public class SymbolFSA implements FSA {
             }
 
         }
-        System.out.println("lexeme: " + lexeme);
 
         TokenType type = null;
         switch (lexeme) {
@@ -182,9 +181,6 @@ public class SymbolFSA implements FSA {
         }
 
         t = new Token(type, lexeme, file.getLineIndex(), file.getColumnIndex() - lexeme.length());
-
-        // System.out.println("leaving thing at " + file.getColumnIndex());
-        System.out.println("found token: " + t.toString());
 
         return t;
     }

@@ -121,14 +121,7 @@ public class NumeralFSA implements FSA {
             break;
         }
 
-        System.out.println("type: " + type);
-        System.out.println("lexeme: " + lexeme);
-        System.out.println("line: " + file.getLineIndex());
-        System.out.println("col: " + (file.getColumnIndex() - lexeme.length()));
         t = new Token(type, lexeme, file.getLineIndex(), file.getColumnIndex() - lexeme.length());
-
-        // System.out.println("leaving thing at " + file.getColumnIndex());
-        System.out.println("found token: " + t.toString());
 
         return t;
     }

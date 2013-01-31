@@ -29,13 +29,10 @@ public class AlphaFSA implements FSA {
                 state = 4;
             } else {
 
-                //char current = file.getNextCharacter();
-
                 switch (state) {
                 case 1:
                     current = file.getNextCharacter();
                     if (Letters.isLetter(current)) {
-                        //System.out.println("going from state 1 to state 2");
                         state = 2;
                         lexeme += current;
                     } else if (current == '_') {
@@ -46,12 +43,10 @@ public class AlphaFSA implements FSA {
                 case 2:
                     current = file.getCurrentCharacter();
                     if (Letters.isLetterOrDigit(current)) {
-                        //System.out.println("going from state 2 to state 2");
                         current = file.getNextCharacter();
                         state = 2;
                         lexeme += current;
                     } else if (current == '_') {
-                        //System.out.println("going from state 2 to state 3");
                         current = file.getNextCharacter();
                         state = 3;
                         lexeme += current;
@@ -76,9 +71,6 @@ public class AlphaFSA implements FSA {
         } else {
             t = new Token(TokenType.MP_IDENTIFIER, lexeme, file.getLineIndex(), file.getColumnIndex() - lexeme.length());
         }
-
-        // System.out.println("leaving thing at " + file.getColumnIndex());
-        System.out.println("found token: " + t.toString());
 
         return t;
     }

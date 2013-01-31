@@ -24,7 +24,6 @@ public class WhitespaceFSA implements FSA {
                 case 1:
                     current = file.getNextCharacter();
                     if (WhiteSpace.isWhitespace(current)) {
-                        //System.out.println("going from state 1 to state 2");
                         state = 2;
                         lexeme += current;
                     }
@@ -33,14 +32,11 @@ public class WhitespaceFSA implements FSA {
                     current = file.getCurrentCharacter();
                     if (WhiteSpace.isWhitespace(current)) {
                         current = file.getNextCharacter();
-                        //System.out.println("going from state 2 to state 2");
                         state = 2;
                         lexeme += current;
                     } else {
-                        //System.out.println("going from state 2 to state 3");
                         state = 3;
                     }
-                    //TODO EOL error state thing
                     break;
 
                 }
@@ -48,8 +44,6 @@ public class WhitespaceFSA implements FSA {
 
         }
         t = new Token(TokenType.MP_WHITESPACE, lexeme, file.getLineIndex(), file.getColumnIndex() - lexeme.length());
-        //System.out.println("leaving thing at " + file.getColumnIndex());
-        System.out.println("found token: " + t.toString());
 
         return t;
     }
