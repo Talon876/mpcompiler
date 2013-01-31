@@ -33,7 +33,7 @@ public class Line {
     public char getCurrentCharacter() {
         return getCharAt(columnIndex - 1);
     }
-    
+
     /**
      * 
      * @return the full line as a string without a newline character
@@ -52,6 +52,10 @@ public class Line {
 
     public int getColumnIndex() {
         return columnIndex;
+    }
+
+    public void setColumnIndex(int newIndex) {
+        columnIndex = newIndex;
     }
 
     public boolean isEmpty() {

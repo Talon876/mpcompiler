@@ -38,6 +38,9 @@ public class AlphaFSA implements FSA {
                     } else if (current == '_') {
                         state = 3;
                         lexeme += current;
+                    } else {
+                        return new Token(TokenType.MP_ERROR, "" + current, file.getLineIndex(),
+                                file.getColumnIndex() - 1);
                     }
                     break;
                 case 2:
@@ -59,6 +62,9 @@ public class AlphaFSA implements FSA {
                     if (Letters.isLetterOrDigit(current)) {
                         state = 2;
                         lexeme += current;
+                    } else {
+                        return new Token(TokenType.MP_ERROR, "" + current, file.getLineIndex(),
+                                file.getColumnIndex() - 1);
                     }
                     break;
                 }

@@ -65,12 +65,16 @@ public class Scanner {
                 tokens.add(currentToken);
 
             } else if (currentToken.getType() == TokenType.MP_ERROR) {
-                System.err.println("MP_ERROR: Found invalid first character in token. Token found starting at line "
+                System.err.println("MP_ERROR: Found invalid character: " + currentToken.getLexeme()
+                        + ". Invalid character found at line "
                         + currentToken.getLineNumber() + " column " + currentToken.getColumnNumber());
+                tokens.add(currentToken);
             } else if (currentToken.getType() == TokenType.MP_RUN_STRING) {
                 System.err
-                .println("MP_RUN_STRING: String literal is not properly closed by a single-quote. String found starting at line "
+                .println("MP_RUN_STRING: String literal is not properly closed by a single-quote: "
+                        + currentToken.getLexeme() + ". String found starting at line "
                         + currentToken.getLineNumber() + " column " + currentToken.getColumnNumber());
+                tokens.add(currentToken);
             } else if (currentToken.getType() != TokenType.MP_WHITESPACE
                     && currentToken.getType() != TokenType.MP_COMMENT) {
                 tokens.add(currentToken);
@@ -150,6 +154,7 @@ public class Scanner {
             case 'X':
             case 'Y':
             case 'Z':
+            case '_':
                 tokenFinder = new AlphaFSA();
                 break;
             case '0':

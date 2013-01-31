@@ -137,7 +137,6 @@ public class MPFile {
             } else {
                 System.out.println(lines.get(i).getText());
             }
-
         }
         System.out.println("\n");
     }
@@ -152,6 +151,10 @@ public class MPFile {
 
     public int getColumnIndex() {
         return getCurrentLine().getColumnIndex();
+    }
+
+    public void setColumnIndex(int newIndex) {
+        getCurrentLine().setColumnIndex(newIndex);
     }
 
     public int getLineIndex() {
