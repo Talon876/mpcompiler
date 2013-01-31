@@ -1,4 +1,5 @@
-'kugj''xdgsgds'   	    'gabad'
+'kugj''xdgsgds' 'gabad'
+   'string one                  
                       
                       
 integer and div ) 'asdf'
@@ -16,7 +17,7 @@ integer and div ) 'asdf'
 
 {This
 is
-A
+A{
 Comment}
 
 
