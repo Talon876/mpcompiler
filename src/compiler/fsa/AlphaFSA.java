@@ -31,13 +31,19 @@ public class AlphaFSA implements FSA {
 
                 switch (state) {
                 case 1:
-                    current = file.getNextCharacter();
-                    if (Letters.isLetter(current)) {
-                        state = 2;
-                        lexeme += current;
-                    } else if (current == '_') {
-                        state = 3;
-                        lexeme += current;
+                    if (file.hasNextChar()) {
+
+                        current = file.getNextCharacter();
+                        if (Letters.isLetter(current)) {
+                            state = 2;
+                            lexeme += current;
+                        } else if (current == '_') {
+                            state = 3;
+                            lexeme += current;
+                        } else {
+                            return new Token(TokenType.MP_ERROR, "" + current, file.getLineIndex(),
+                                    file.getColumnIndex() - 1);
+                        }
                     } else {
                         return new Token(TokenType.MP_ERROR, "" + current, file.getLineIndex(),
                                 file.getColumnIndex() - 1);
@@ -58,10 +64,16 @@ public class AlphaFSA implements FSA {
                     }
                     break;
                 case 3:
-                    current = file.getNextCharacter();
-                    if (Letters.isLetterOrDigit(current)) {
-                        state = 2;
-                        lexeme += current;
+                    if (file.hasNextChar()) {
+
+                        current = file.getNextCharacter();
+                        if (Letters.isLetterOrDigit(current)) {
+                            state = 2;
+                            lexeme += current;
+                        } else {
+                            return new Token(TokenType.MP_ERROR, "" + current, file.getLineIndex(),
+                                    file.getColumnIndex() - 1);
+                        }
                     } else {
                         return new Token(TokenType.MP_ERROR, "" + current, file.getLineIndex(),
                                 file.getColumnIndex() - 1);
