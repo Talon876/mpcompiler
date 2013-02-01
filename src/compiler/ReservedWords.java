@@ -66,14 +66,14 @@ public class ReservedWords {
     }
 
     /**
-     * Checks if a string is a reserved word
+     * Checks if a string is a reserved word. Case-insensitive.
      * 
      * @param lexeme
      *            the word to check
      * @return true if the word is a reserved word, false otherwise
      */
     public static boolean isReserved(String lexeme) {
-        return reservedWords.contains(lexeme);
+        return reservedWords.contains(lexeme.toLowerCase());
     }
 
     /**
@@ -86,6 +86,6 @@ public class ReservedWords {
      *             if reservedWord isn't a reservedWord
      */
     public static TokenType convertToToken(String reservedWord) {
-        return tokenMap.get(reservedWord);
+        return tokenMap.get(reservedWord.toLowerCase());
     }
 }
