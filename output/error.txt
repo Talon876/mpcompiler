@@ -1,0 +1,54 @@
+MP_ERROR: Found invalid character: ?. Invalid character found at line 1 column 1
+  1: ?
+     ^
+MP_ERROR: Found invalid character: /. Invalid character found at line 4 column 8
+  4: a++b-67/8//
+            ^
+MP_ERROR: Found invalid character: /. Invalid character found at line 4 column 10
+  4: a++b-67/8//
+              ^
+MP_ERROR: Found invalid character: /. Invalid character found at line 4 column 11
+  4: a++b-67/8//
+               ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 5 column 2
+  5: __apple
+      ^
+MP_RUN_STRING: String literal is not properly closed by a single-quote: This is a run on strin. String found starting at line 6 column 1
+  6: 'This is a run on string
+     ^
+MP_RUN_STRING: String literal is not properly closed by a single-quote: This is a run on string too '. String found starting at line 7 column 1
+  7: 'This is a run on string too ''
+     ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 8 column 7
+  8: apple___
+           ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 8 column 8
+  8: apple___
+            ^
+MP_RUN_COMMENT: Run away comment found starting at line 9 column 1
+  9: { This is a run on comment
+     ^
+MP_ERROR  1 1 ?
+MP_COLON  2 1 :
+MP_FLOAT_LIT  3 1 123E-456
+MP_MINUS  3 9 -
+MP_MINUS  3 10  -
+MP_INTEGER_LIT  3 11  5
+MP_IDENTIFIER 4 1 a
+MP_PLUS 4 2 +
+MP_PLUS 4 3 +
+MP_IDENTIFIER 4 4 b
+MP_MINUS  4 5 -
+MP_INTEGER_LIT  4 6 67
+MP_ERROR  4 8 /
+MP_INTEGER_LIT  4 9 8
+MP_ERROR  4 10  /
+MP_ERROR  4 11  /
+MP_ERROR  5 2 _
+MP_IDENTIFIER 5 3 apple
+MP_RUN_STRING 6 1 This is a run on strin
+MP_RUN_STRING 7 1 This is a run on string too '
+MP_ERROR  8 7 _
+MP_ERROR  8 8 _
+MP_RUN_COMMENT  9 1  This is a run on comment
+MP_EOF  9 27  EOF

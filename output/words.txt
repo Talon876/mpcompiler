@@ -1,0 +1,106 @@
+MP_ERROR: Found invalid character: _. Invalid character found at line 26 column 3
+    26: a__
+          ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 28 column 5
+    28: a_b___3
+            ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 29 column 3
+    29: b_____5
+          ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 29 column 5
+    29: b_____5
+            ^
+MP_ERROR: Found invalid character: _. Invalid character found at line 31 column 7
+    31: _X3Z_5_
+              ^
+MP_ERROR: Found invalid character: /. Invalid character found at line 35 column 8
+    35: a3+b4-c/67
+               ^
+MP_AND  1   1   AND
+MP_AND  1   11  and
+MP_AND  1   23  aNd
+MP_BEGIN    2   1   BEGIN
+MP_BEGIN    2   11  begin
+MP_BEGIN    2   23  bEgIn
+MP_DIV  3   1   DIV
+MP_DIV  3   11  div
+MP_DIV  3   23  dIv
+MP_DO   4   1   DO
+MP_DO   4   11  do
+MP_DO   4   23  Do
+MP_DOWNTO   5   1   DOWNTO
+MP_DOWNTO   5   11  downto
+MP_DOWNTO   5   23  DownTo
+MP_ELSE 6   1   ELSE
+MP_ELSE 6   11  else
+MP_ELSE 6   23  ELSe
+MP_END  7   1   END
+MP_END  7   11  end
+MP_END  7   23  ENd
+MP_FOR  8   1   FOR
+MP_FOR  8   11  for
+MP_FOR  8   23  foR
+MP_FUNCTION 9   1   FUNCTION
+MP_FUNCTION 9   11  function
+MP_FUNCTION 9   23  fUnCtIoN
+MP_IF   10  1   IF
+MP_IF   10  11  if
+MP_IF   10  23  If
+MP_MOD  11  1   MOD
+MP_MOD  11  11  mod
+MP_MOD  11  23  mOd
+MP_NOT  12  1   NOT
+MP_NOT  12  11  not
+MP_NOT  12  23  nOt
+MP_OR   13  1   OR
+MP_OR   13  11  or
+MP_OR   13  23  oR
+MP_PROCEDURE    14  1   PROCEDURE
+MP_PROCEDURE    14  11  procedure
+MP_PROCEDURE    14  23  proceDURE
+MP_PROGRAM  15  1   PROGRAM
+MP_PROGRAM  15  11  program
+MP_PROGRAM  15  23  PROGram
+MP_READ 16  1   READ
+MP_READ 16  11  read
+MP_READ 16  23  rEAD
+MP_REPEAT   17  1   REPEAT
+MP_REPEAT   17  11  repeat
+MP_REPEAT   17  23  RePeAT
+MP_THEN 18  1   THEN
+MP_THEN 18  11  then
+MP_THEN 18  23  TheN
+MP_TO   19  1   TO
+MP_TO   19  11  to
+MP_TO   19  23  tO
+MP_UNTIL    20  1   UNTIL
+MP_UNTIL    20  11  until
+MP_UNTIL    20  23  untiL
+MP_VAR  21  1   VAR
+MP_VAR  21  11  var
+MP_VAR  21  23  vAr
+MP_WHILE    22  1   WHILE
+MP_WHILE    22  11  while
+MP_WHILE    22  23  whiLE
+MP_WRITE    23  1   WRITE
+MP_WRITE    23  11  write
+MP_WRITE    23  23  wRITe
+MP_ERROR    26  3   _
+MP_IDENTIFIER   27  1   a
+MP_ERROR    28  5   _
+MP_IDENTIFIER   28  6   _3
+MP_ERROR    29  3   _
+MP_ERROR    29  5   _
+MP_IDENTIFIER   29  6   _5
+MP_IDENTIFIER   30  1   _x3Z_5
+MP_ERROR    31  7   _
+MP_IDENTIFIER   33  1   begins
+MP_IDENTIFIER   34  1   ends
+MP_IDENTIFIER   35  1   a3
+MP_PLUS 35  3   +
+MP_IDENTIFIER   35  4   b4
+MP_MINUS    35  6   -
+MP_IDENTIFIER   35  7   c
+MP_ERROR    35  8   /
+MP_INTEGER_LIT  35  9   67
+MP_EOF  35  11  EOF

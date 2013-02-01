@@ -38,7 +38,7 @@ public class Scanner {
                 System.exit(1);
             }
 
-            file.print(true);
+            //file.print(true);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
