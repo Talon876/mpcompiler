@@ -7,12 +7,12 @@ public class MP {
     public static void main(String[] args) {
 
         if (args.length < 1) {
-            System.out.println("Usage: java MP <filename.mp>");
+            System.out.println("Usage: java MP <filename.up>");
 
         } else {
             String filename = args[0];
 
-            if (filename.endsWith(".pas")) {
+            if (filename.endsWith(".up")) {
                 System.out.println("Compiling: " + filename);
 
                 Scanner s = new Scanner();
@@ -27,7 +27,7 @@ public class MP {
                 }
 
             } else {
-                System.out.println("Usage: java MP <filename.pas>");
+                System.out.println("Usage: java MP <filename.up>");
             }
         }
 
