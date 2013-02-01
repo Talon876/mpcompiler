@@ -58,22 +58,29 @@ public class Scanner {
         Token currentToken = null;
         do {
             currentToken = getNextToken();
+
             if (currentToken.getType() == TokenType.MP_RUN_COMMENT) {
                 System.err.println("MP_RUN_COMMENT: Run away comment found starting at line "
                         + currentToken.getLineNumber() + " column "
                         + currentToken.getColumnNumber());
+                file.getLineAt(currentToken.getLineNumber()).printLineWithCaret(currentToken.getLineNumber(),
+                        currentToken.getColumnNumber());
                 tokens.add(currentToken);
 
             } else if (currentToken.getType() == TokenType.MP_ERROR) {
                 System.err.println("MP_ERROR: Found invalid character: " + currentToken.getLexeme()
                         + ". Invalid character found at line "
                         + currentToken.getLineNumber() + " column " + currentToken.getColumnNumber());
+                file.getLineAt(currentToken.getLineNumber()).printLineWithCaret(currentToken.getLineNumber(),
+                        currentToken.getColumnNumber());
                 tokens.add(currentToken);
             } else if (currentToken.getType() == TokenType.MP_RUN_STRING) {
                 System.err
                 .println("MP_RUN_STRING: String literal is not properly closed by a single-quote: "
                         + currentToken.getLexeme() + ". String found starting at line "
                         + currentToken.getLineNumber() + " column " + currentToken.getColumnNumber());
+                file.getLineAt(currentToken.getLineNumber()).printLineWithCaret(currentToken.getLineNumber(),
+                        currentToken.getColumnNumber());
                 tokens.add(currentToken);
             } else if (currentToken.getType() != TokenType.MP_WHITESPACE
                     && currentToken.getType() != TokenType.MP_COMMENT) {

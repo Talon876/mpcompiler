@@ -72,24 +72,21 @@ public class Line {
         return next;
     }
 
-    //    public boolean hasUsefulCharactersLeft() {
-    //        int tempColIdx = columnIndex;
-    //        boolean hasUseful = false;
-    //        if (tempColIdx >= getLength() || isEmpty()) {
-    //            hasUseful = false;
-    //        } else {
-    //            while (tempColIdx <= getLength() && !hasUseful) {
-    //                hasUseful = !WhiteSpace.isWhitespace(getCharAt(tempColIdx - 1));
-    //                tempColIdx++;
-    //            }
-    //        }
-    //        return hasUseful;
-    //    }
+    public void printLineWithCaret(int lineNum, int caretIndex) {
+        System.out.println("\t" + lineNum + ": " + getText());
+        System.out.print("\t"); //offset tab
+        for (int i = 0; i < ("" + lineNum).length(); i++) {
+            System.out.print(" "); //offset by line number length
+        }
+        System.out.print("  "); //offset colon and space
+        for (int i = 0; i < caretIndex - 1; i++) {
+            System.out.print(" "); //add spaces up to the caretIndex - 1
+        }
+        System.out.println("^");
+    }
 
-    //    public void advanceColumnIdxToUsefulCharacter() {
-    //        while (WhiteSpace.isWhitespace(getCurrentCharacter())) {
-    //            columnIndex++;
-    //            //TODO error bounds checking
-    //        }
-    //    }
+    @Override
+    public String toString() {
+        return getText();
+    }
 }
