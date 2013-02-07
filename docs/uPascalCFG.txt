@@ -1,0 +1,105 @@
+SystemGoal -> Program mp_eof.
+Program -> ProgramHeading mp_scolon Block mp_period.
+ProgramHeading -> mp_program ProgramIdentifier.
+Block -> VariableDeclarationPart ProcedureAndFunctionDeclarationPart StatementPart.
+VariableDeclarationPart -> mp_var VariableDeclaration mp_scolon VariableDeclarationTail
+| .
+VariableDeclarationTail -> VariableDeclaration mp_scolon VariableDeclarationTail
+| .
+VariableDeclaration -> mp_identifier mp_colon Type.
+Type -> mp_integer_lit
+| mp_fixed_lit
+| mp_float_lit.
+ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
+| FunctionDeclaration ProcedureAndFunctionDeclarationPart
+| .
+ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon.
+FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon.
+ProcedureHeading -> mp_procedure mp_identifier OptionalFormalParameterList.
+FunctionHeading -> mp_function mp_identifier OptionalFormalParameterList.
+OptionalFormalParameterList -> mp_lparen FormalParameterSection FormalParameterSectionTail mp_rparen
+| .
+FormalParameterSectionTail -> mp_scolon FormalParameterSection FormalParameterSectionTail
+| .
+FormalParameterSection -> ValueParameterSection
+| VariableParameterSection.
+ValueParameterSection -> IdentifierList.
+VariableParameterSection -> mp_var IdentifierList.
+StatementPart -> CompoundStatement.
+CompoundStatement -> mp_begin StatementSequence mp_end.
+StatementSequence -> Statement StatementTail.
+StatementTail -> mp_scolon Statement StatementTail
+| .
+Statement -> EmptyStatement
+| WriteStatement
+| CompoundStatement
+| ReadStatement
+| AssignmentStatement
+| IfStatement
+| WhileStatement
+| RepeatStatement
+| ForStatement
+| ProcedureStatement.
+EmptyStatement -> .
+ReadStatement -> mp_read mp_lparen ReadParameter ReadParameterTail.
+ReadParameterTail -> mp_comma ReadParameter ReadParameterTail
+| .
+ReadParameter -> VariableIdentifier.
+WriteStatement -> mp_write mp_lparen WriteParameter WriteParameterTail mp_rparen.
+WriteParameterTail -> mp_comma WriteParameter WriteParameterTail.
+WriteParameter -> OrdinalExpression.
+AssignmentStatement -> VariableIdentifier mp_assign Expression
+| FunctionIdentifier mp_assign Expression.
+IfStatement -> mp_if BooleanExpression mp_then Statement OptionalElsePart.
+OptionalElsePart -> mp_else Statement
+| .
+RepeatStatement -> mp_repeat StatementSequence mp_until BooleanExpression.
+WhileStatement -> mp_while BooleanExpression mp_do Statement.
+ForStatement -> mp_for ControlVariable mp_assign InitialValue StepValue FinalValue mp_do Statement.
+ControlVariable -> VariableIdentifier.
+InitialValue -> OrdinalExpression.
+StepValue -> mp_to
+| mp_downto.
+FinalValue -> OrdinalExpression.
+ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList.
+OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen.
+ActualParameterTail -> mp_comma ActualParameter ActualParameterTail.
+ActualParameter -> OrdinalExpression.
+Expression -> SimpleExpression OptionalRelationalPart.
+OptionalRelationalPart -> RelationalOperator SimpleExpression
+| .
+RelationalOperator -> mp_equal
+| mp_lthan
+| mp_lequal
+| mp_gthan
+| mp_gequal
+| mp_nequal.
+SimpleExpression -> OptionalSign Term TermTail.
+TermTail -> AddingOperator Term TermTail.
+OptionalSign -> mp_plus
+| mp_minus
+| .
+AddingOperator -> mp_plus
+| mp_minus
+| mp_or.
+Term -> Factor FactorTail.
+FactorTail -> MultiplyingOperator Factor FactorTail
+| .
+MultiplyingOperator -> mp_times
+| mp_div
+| mp_mod
+| mp_and.
+Factor -> UnsignedInteger
+| VariableIdentifier
+| mp_not Factor
+| mp_lparen Expression mp_rparen
+| FunctionIdentifier OptionalActualParameterList.
+ProgramIdentifier -> mp_identifier.
+VariableIdentifier -> mp_identifier.
+ProcedureIdentifier -> mp_identifier.
+FunctionIdentifier -> mp_identifier.
+BooleanExpression -> Expression.
+OrdinalExpression -> Expression.
+IdentifierList -> mp_identifier IdentifierTail.
+IdentifierTail -> mp_comma mp_identifier IdentifierTail
+| .
