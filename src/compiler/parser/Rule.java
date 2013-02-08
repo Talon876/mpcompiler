@@ -240,7 +240,6 @@ public class Rule {
         }
     }
 
-
     //Starting at 35
 
     public void ifStatement()
@@ -370,5 +369,428 @@ public class Rule {
         }
     }
 
+    public void finalValue() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+        case MP_MINUS:
+        case MP_PLUS:
+            ordinalExpression(); //FinalValue -> OrdinalExpression
+            break;
+        default:
+            error();
+        }
+    }
 
+    public void procedureStatement() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            procedureIdentifier(); //ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
+            optionalActualParameterList();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void optionalActualParameterList() {
+        switch (globalLookAhead.getType()) {
+        case MP_COMMA:
+        case MP_RPAREN:
+        case MP_AND:
+        case MP_MOD:
+        case MP_DIV:
+        case MP_TIMES:
+        case MP_OR:
+        case MP_MINUS:
+        case MP_PLUS:
+        case MP_NEQUAL:
+        case MP_GEQUAL:
+        case MP_LEQUAL:
+        case MP_GTHAN:
+        case MP_LTHAN:
+        case MP_EQUAL:
+        case MP_DOWNTO:
+        case MP_TO:
+        case MP_DO:
+        case MP_UNTIL:
+        case MP_ELSE:
+        case MP_THEN:
+        case MP_SCOLON:
+        case MP_END:
+            break;
+        case MP_LPAREN:
+            match(TokenType.MP_LPAREN); //OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen
+            actualParameter();
+            actualParameterTail();
+            match(TokenType.MP_RPAREN);
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void actualParameterTail() {
+        switch (globalLookAhead.getType()) {
+        case MP_COMMA:
+            match(TokenType.MP_COMMA); //ActualParameterTail -> mp_comma ActualParameter ActualParameterTail
+            actualParameter();
+            actualParameterTail();
+            break;
+        case MP_RPAREN:
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void actualParameter() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+        case MP_MINUS:
+        case MP_PLUS:
+            ordinalExpression(); //ActualParameter -> OrdinalExpression
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void expression() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+        case MP_MINUS:
+        case MP_PLUS:
+            simpleExpression(); //Expression -> SimpleExpression OptionalRelationalPart
+            optionalRelationalPart();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void optionalRelationalPart() {
+        switch (globalLookAhead.getType()) {
+        case MP_COMMA:
+        case MP_RPAREN:
+        case MP_DOWNTO:
+        case MP_TO:
+        case MP_DO:
+        case MP_UNTIL:
+        case MP_ELSE:
+        case MP_THEN:
+        case MP_SCOLON:
+        case MP_END:
+            break;
+        case MP_NEQUAL:
+        case MP_GEQUAL:
+        case MP_LEQUAL:
+        case MP_GTHAN:
+        case MP_LTHAN:
+        case MP_EQUAL:
+            relationalOperator(); //OptionalRelationalPart -> RelationalOperator SimpleExpression
+            simpleExpression();
+        default:
+            error();
+        }
+    }
+
+    public void relationalOperator() {
+        switch (globalLookAhead.getType()) {
+        case MP_NEQUAL:
+            match(TokenType.MP_NEQUAL);
+            break;
+        case MP_GEQUAL:
+            match(TokenType.MP_GEQUAL);
+            break;
+        case MP_LEQUAL:
+            match(TokenType.MP_LEQUAL);
+            break;
+        case MP_GTHAN:
+            match(TokenType.MP_GTHAN);
+            break;
+        case MP_LTHAN:
+            match(TokenType.MP_LTHAN);
+            break;
+        case MP_EQUAL:
+            match(TokenType.MP_EQUAL);
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void simpleExpression() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+        case MP_MINUS:
+        case MP_PLUS:
+            optionalSign(); //SimpleExpression -> OptionalSign Term TermTail
+            term();
+            termTail();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void termTail() {
+        switch (globalLookAhead.getType()) {
+        case MP_COMMA:
+        case MP_RPAREN:
+        case MP_NEQUAL:
+        case MP_GEQUAL:
+        case MP_LEQUAL:
+        case MP_GTHAN:
+        case MP_LTHAN:
+        case MP_EQUAL:
+        case MP_DOWNTO:
+        case MP_TO:
+        case MP_DO:
+        case MP_UNTIL:
+        case MP_ELSE:
+        case MP_THEN:
+        case MP_SCOLON:
+        case MP_END:
+            break;
+        case MP_OR:
+        case MP_MINUS:
+        case MP_PLUS:
+            addingOperator(); //TermTail -> AddingOperator Term TermTail
+            term();
+            termTail();
+        default:
+            error();
+        }
+    }
+
+    public void optionalSign() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+            break;
+        case MP_MINUS:
+            match(TokenType.MP_MINUS); //OptionalSign -> mp_minus
+            break;
+        case MP_PLUS:
+            match(TokenType.MP_PLUS); //OptionalSign -> mp_plus
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void addingOperator() {
+        switch (globalLookAhead.getType()) {
+        case MP_OR:
+            match(TokenType.MP_OR); //AddingOperator -> mp_or
+            break;
+        case MP_MINUS:
+            match(TokenType.MP_MINUS); //AddingOperator -> mp_minus
+            break;
+        case MP_PLUS:
+            match(TokenType.MP_PLUS); //AddingOperator -> mp_plus
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void term() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+            factor(); //Term -> Factor FactorTail
+            factorTail();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void factorTail() {
+        switch (globalLookAhead.getType()) {
+        case MP_COMMA:
+        case MP_RPAREN:
+        case MP_OR:
+        case MP_MINUS:
+        case MP_PLUS:
+        case MP_NEQUAL:
+        case MP_GEQUAL:
+        case MP_LEQUAL:
+        case MP_GTHAN:
+        case MP_LTHAN:
+        case MP_EQUAL:
+        case MP_DOWNTO:
+        case MP_TO:
+        case MP_DO:
+        case MP_UNTIL:
+        case MP_ELSE:
+        case MP_THEN:
+        case MP_SCOLON:
+        case MP_END:
+            break;
+        case MP_AND:
+        case MP_MOD:
+        case MP_DIV:
+        case MP_TIMES:
+            multiplyingOperator(); //FactorTail -> MultiplyingOperator Factor FactorTail
+            factor();
+            factorTail();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void multiplyingOperator() {
+        switch (globalLookAhead.getType()) {
+        case MP_AND:
+            match(TokenType.MP_AND);
+            break;
+        case MP_MOD:
+            match(TokenType.MP_MOD);
+            break;
+        case MP_DIV:
+            match(TokenType.MP_DIV);
+            break;
+        case MP_TIMES:
+            match(TokenType.MP_TIMES);
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void factor() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            variableIdentifier(); //Factor -> VariableIdentifier
+            //TODO make this not ambiguous
+            functionIdentifier(); //Factor -> FunctionIdentifier OptionalActualParameterList
+            optionalActualParameterList();
+            break;
+        case MP_LPAREN:
+            match(TokenType.MP_LPAREN); //Factor -> mp_lparen Expression mp_rparen
+            expression();
+            match(TokenType.MP_RPAREN);
+            break;
+        case MP_NOT:
+            match(TokenType.MP_NOT); //Factor -> mp_not Factor
+            factor();
+            break;
+        case MP_INTEGER_LIT:
+            match(TokenType.MP_INTEGER_LIT); //Factor -> mp_integer_lit
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void programIdentifier() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            match(TokenType.MP_IDENTIFIER);
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void variableIdentifier() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            match(TokenType.MP_IDENTIFIER);
+        default:
+            error();
+        }
+    }
+
+    public void procedureIdentifier() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            match(TokenType.MP_IDENTIFIER);
+        default:
+            error();
+        }
+    }
+
+    public void functionIdentifier() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            match(TokenType.MP_IDENTIFIER);
+        default:
+            error();
+        }
+    }
+
+    public void booleanExpression() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+        case MP_MINUS:
+        case MP_PLUS:
+            expression();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void ordinalExpression() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+        case MP_LPAREN:
+        case MP_NOT:
+        case MP_INTEGER_LIT:
+        case MP_MINUS:
+        case MP_PLUS:
+            expression();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void identifierList() {
+        switch (globalLookAhead.getType()) {
+        case MP_IDENTIFIER:
+            match(TokenType.MP_IDENTIFIER); //IdentifierList -> mp_identifier IdentifierTail
+            identifierTail();
+            break;
+        default:
+            error();
+        }
+    }
+
+    public void identifierTail() {
+        switch (globalLookAhead.getType()) {
+        case MP_COMMA:
+            match(TokenType.MP_COMMA); //IdentifierTail -> mp_comma mp_identifier IdentifierTail
+            match(TokenType.MP_IDENTIFIER);
+            identifierTail();
+            break;
+        case MP_COLON:
+            break;
+        default:
+            error();
+        }
+    }
 }
