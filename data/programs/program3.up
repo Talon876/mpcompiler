@@ -1,6 +1,8 @@
-program Test;
-var I: Integer;
-var F: Float;
-begin
+prOgram Test;
+var train, tree, speaker, couch, ba_con: integer; 
 
+begIn
+    Write(tree);
+    Read(I);
+    tree := couch + ba_con  (train + 5);
 end.

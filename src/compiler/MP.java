@@ -1,6 +1,6 @@
 package compiler;
 
-import java.util.ArrayList;
+import compiler.parser.Parser;
 
 public class MP {
 
@@ -16,15 +16,17 @@ public class MP {
                 System.out.println("Compiling: " + filename);
 
                 Scanner s = new Scanner();
-
                 s.openFile(filename);
-                ArrayList<Token> tokens = s.getTokens();
-                //print tokens to token file
-                for (Token t : tokens) {
 
-                    System.out.println(t.toString());
+                Parser p = new Parser(s);
 
-                }
+                //                ArrayList<Token> tokens = s.getTokens();
+                //                //print tokens to token file
+                //                for (Token t : tokens) {
+                //
+                //                    System.out.println(t.toString());
+                //
+                //                }
 
             } else {
                 System.out.println("Usage: java MP <filename.up>");

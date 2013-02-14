@@ -95,6 +95,23 @@ public class Scanner {
     }
 
     /**
+     * Finds the next token that isn't MP_WHITESPACE or MP_COMMENT
+     * 
+     * @return the next useful token
+     */
+    public Token getToken() {
+        Token nextToken = getNextToken();
+
+        while (nextToken.getType() == TokenType.MP_WHITESPACE || nextToken.getType() == TokenType.MP_COMMENT) {
+            nextToken = getNextToken();
+        }
+
+        checkForScanError(nextToken);
+
+        return nextToken;
+    }
+
+    /**
      * Finds the next token in the file
      * 
      * @return the next token

@@ -5,6 +5,7 @@ import compiler.Token;
 import compiler.TokenType;
 
 public class Parser {
+    private static final boolean DEBUG = false;
 
     Token lookAhead;
     Token lookAhead2;
@@ -12,28 +13,56 @@ public class Parser {
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
-        //lookAhead = scanner.getNextToken()
+        lookAhead = scanner.getToken();
 
         systemGoal();
-        System.out.println("The input program parsers!");
+        System.out.println("The input program parses!");
     }
 
     public void match(TokenType tokenInput) {
         if (lookAhead.getType() == tokenInput) {
+            if (DEBUG) {
+                System.out.println("Matched token: " + lookAhead.getType() + " with " + tokenInput);
+            }
             //get next lookahead
+            lookAhead = scanner.getToken();
         } else {
-            syntaxError();
+            matchError();
         }
+    }
+
+    public void matchError() {
+        System.out.println("Match error found on line " + lookAhead.getLineNumber() + ", column "
+                + lookAhead.getColumnNumber() + ": " + lookAhead.getLexeme());
     }
 
     public void syntaxError() {
         System.out.println("Syntax error found on line " + lookAhead.getLineNumber() + ", column "
-                + lookAhead.getColumnNumber());
+                + lookAhead.getColumnNumber() + ": " + lookAhead.getLexeme());
+        if (DEBUG) {
+            System.out.println("Current lookahead token: " + lookAhead.toString());
+        }
         System.exit(1);
+    }
+
+    public void debug() {
+        if (DEBUG) {
+            System.out.println("\tExpanding nonterminal: " + Thread.currentThread().getStackTrace()[2].getMethodName()
+                    + "() and current lookahead: " + lookAhead.getType());
+        }
+    }
+
+    public void lambda() {
+        if (DEBUG) {
+            System.out.println("\tExpanding lambda rule in "
+                    + Thread.currentThread().getStackTrace()[2].getMethodName()
+                    + "()");
+        }
     }
 
     public void systemGoal()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_PROGRAM:
             program();
@@ -46,6 +75,7 @@ public class Parser {
 
     public void program()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_PROGRAM:
             programHeading();
@@ -60,6 +90,7 @@ public class Parser {
 
     public void programHeading()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_PROGRAM:
             match(TokenType.MP_PROGRAM);
@@ -72,10 +103,9 @@ public class Parser {
 
     public void block()
     {
+        debug();
         switch (lookAhead.getType()) {
-        case MP_PROCEDURE:
         case MP_VAR:
-        case MP_FUNCTION:
             variableDeclarationPart();
             procedureAndFunctionDeclarationPart();
             statementPart();
@@ -87,9 +117,10 @@ public class Parser {
 
     public void variableDeclarationPart()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_VAR:
-            match(TokenType.MP_PROGRAM);
+            match(TokenType.MP_VAR);
             variableDeclaration();
             match(TokenType.MP_SCOLON);
             variableDeclarationTail();
@@ -101,6 +132,7 @@ public class Parser {
 
     public void variableDeclarationTail()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             variableDeclaration();
@@ -110,6 +142,7 @@ public class Parser {
         case MP_BEGIN:
         case MP_PROCEDURE:
         case MP_FUNCTION:
+            lambda();
             break;
         default:
             syntaxError();
@@ -118,10 +151,11 @@ public class Parser {
 
     public void variableDeclaration()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             identifierList();
-            match(TokenType.MP_SCOLON);
+            match(TokenType.MP_COLON);
             type();
             break;
         default:
@@ -131,6 +165,7 @@ public class Parser {
 
     public void type()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_INTEGER:
@@ -149,6 +184,7 @@ public class Parser {
 
     public void procedureAndFunctionDeclarationPart()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE:
             procedureDeclaration();
@@ -159,6 +195,7 @@ public class Parser {
             procedureAndFunctionDeclarationPart();
             break;
         case MP_BEGIN:
+            lambda();
             break;
         default:
             syntaxError();
@@ -167,6 +204,7 @@ public class Parser {
 
     public void procedureDeclaration()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE:
             procedureHeading();
@@ -181,6 +219,7 @@ public class Parser {
 
     public void functionDeclaration()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_FUNCTION:
             functionHeading();
@@ -195,6 +234,7 @@ public class Parser {
 
     public void procedureHeading()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE:
             match(TokenType.MP_PROCEDURE);
@@ -208,6 +248,7 @@ public class Parser {
 
     public void functionHeading()
     {
+        debug();
         switch (lookAhead.getType()) {
         case MP_FUNCTION:
             match(TokenType.MP_FUNCTION);
@@ -223,6 +264,7 @@ public class Parser {
 
     public void optionalFormalParameterList()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_LPAREN:
@@ -233,6 +275,7 @@ public class Parser {
             break;
         case MP_SCOLON:
         case MP_COLON:
+            lambda();
             break;
         default:
             syntaxError();
@@ -243,6 +286,7 @@ public class Parser {
 
     public void ifStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IF:
@@ -259,6 +303,7 @@ public class Parser {
 
     public void optionalElsePart()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_ELSE:
@@ -269,6 +314,7 @@ public class Parser {
         case MP_UNTIL:
         case MP_SCOLON:
         case MP_END:
+            lambda();
             break;
         default:
             syntaxError();
@@ -277,6 +323,7 @@ public class Parser {
 
     public void repeatStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_REPEAT:
@@ -292,6 +339,7 @@ public class Parser {
 
     public void whileStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_WHILE:
@@ -307,6 +355,7 @@ public class Parser {
 
     public void forStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_FOR:
@@ -326,6 +375,7 @@ public class Parser {
 
     public void controlVariable()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER:
@@ -338,6 +388,7 @@ public class Parser {
 
     public void initialValue()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER:
@@ -355,6 +406,7 @@ public class Parser {
 
     public void stepValue()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_TO:
@@ -369,6 +421,7 @@ public class Parser {
     }
 
     public void finalValue() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
@@ -384,6 +437,7 @@ public class Parser {
     }
 
     public void procedureStatement() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             procedureIdentifier(); //ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
@@ -395,6 +449,7 @@ public class Parser {
     }
 
     public void optionalActualParameterList() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
@@ -419,6 +474,7 @@ public class Parser {
         case MP_THEN:
         case MP_SCOLON:
         case MP_END:
+            lambda();
             break;
         case MP_LPAREN:
             match(TokenType.MP_LPAREN); //OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen
@@ -432,6 +488,7 @@ public class Parser {
     }
 
     public void actualParameterTail() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
             match(TokenType.MP_COMMA); //ActualParameterTail -> mp_comma ActualParameter ActualParameterTail
@@ -439,6 +496,7 @@ public class Parser {
             actualParameterTail();
             break;
         case MP_RPAREN:
+            lambda();
             break;
         default:
             syntaxError();
@@ -446,6 +504,7 @@ public class Parser {
     }
 
     public void actualParameter() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
@@ -461,6 +520,7 @@ public class Parser {
     }
 
     public void expression() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
@@ -477,6 +537,7 @@ public class Parser {
     }
 
     public void optionalRelationalPart() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
@@ -488,6 +549,7 @@ public class Parser {
         case MP_THEN:
         case MP_SCOLON:
         case MP_END:
+            lambda();
             break;
         case MP_NEQUAL:
         case MP_GEQUAL:
@@ -497,12 +559,14 @@ public class Parser {
         case MP_EQUAL:
             relationalOperator(); //OptionalRelationalPart -> RelationalOperator SimpleExpression
             simpleExpression();
+            break;
         default:
             syntaxError();
         }
     }
 
     public void relationalOperator() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_NEQUAL:
             match(TokenType.MP_NEQUAL);
@@ -528,6 +592,7 @@ public class Parser {
     }
 
     public void simpleExpression() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
@@ -545,6 +610,7 @@ public class Parser {
     }
 
     public void termTail() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
@@ -562,6 +628,7 @@ public class Parser {
         case MP_THEN:
         case MP_SCOLON:
         case MP_END:
+            lambda();
             break;
         case MP_OR:
         case MP_MINUS:
@@ -569,17 +636,20 @@ public class Parser {
             addingOperator(); //TermTail -> AddingOperator Term TermTail
             term();
             termTail();
+            break;
         default:
             syntaxError();
         }
     }
 
     public void optionalSign() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
+            lambda();
             break;
         case MP_MINUS:
             match(TokenType.MP_MINUS); //OptionalSign -> mp_minus
@@ -593,6 +663,7 @@ public class Parser {
     }
 
     public void addingOperator() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_OR:
             match(TokenType.MP_OR); //AddingOperator -> mp_or
@@ -609,6 +680,7 @@ public class Parser {
     }
 
     public void term() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
@@ -623,6 +695,7 @@ public class Parser {
     }
 
     public void factorTail() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
@@ -643,6 +716,7 @@ public class Parser {
         case MP_THEN:
         case MP_SCOLON:
         case MP_END:
+            lambda();
             break;
         case MP_AND:
         case MP_MOD:
@@ -658,6 +732,7 @@ public class Parser {
     }
 
     public void multiplyingOperator() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_AND:
             match(TokenType.MP_AND);
@@ -677,12 +752,13 @@ public class Parser {
     }
 
     public void factor() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             variableIdentifier(); //Factor -> VariableIdentifier
             //TODO make this not ambiguous
-            functionIdentifier(); //Factor -> FunctionIdentifier OptionalActualParameterList
-            optionalActualParameterList();
+            //functionIdentifier(); //Factor -> FunctionIdentifier OptionalActualParameterList
+            // optionalActualParameterList();
             break;
         case MP_LPAREN:
             match(TokenType.MP_LPAREN); //Factor -> mp_lparen Expression mp_rparen
@@ -702,6 +778,7 @@ public class Parser {
     }
 
     public void programIdentifier() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             match(TokenType.MP_IDENTIFIER);
@@ -712,18 +789,22 @@ public class Parser {
     }
 
     public void variableIdentifier() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             match(TokenType.MP_IDENTIFIER);
+            break;
         default:
             syntaxError();
         }
     }
 
     public void procedureIdentifier() {
+        debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             match(TokenType.MP_IDENTIFIER);
+            break;
         default:
             syntaxError();
         }
@@ -731,6 +812,7 @@ public class Parser {
 
     public void formalParameterSectionTail()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_FUNCTION: //21 FormalParameterSectionTail �����mp_scolon FormalParameterSectionFormalParameterSectionTail
@@ -739,6 +821,7 @@ public class Parser {
             formalParameterSectionTail();
             break;
         case MP_RPAREN: //22 FormalParameterSectionTail ��� &epsilon
+            lambda();
             break;
         default:
             syntaxError();
@@ -747,6 +830,7 @@ public class Parser {
 
     public void formalParameterSection()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //23 FormalParameterSection����� ValueParameterSection
@@ -762,6 +846,7 @@ public class Parser {
 
     public void valueParameterSection()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //25 ValueParameterSection����� IdentifierList��mp_colon��Type
@@ -776,6 +861,7 @@ public class Parser {
 
     public void variableParameterSection()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_VAR: //26 VariableParameterSection�������mp_var IdentifierList��mp_colon��Type
@@ -791,6 +877,7 @@ public class Parser {
 
     public void statementPart()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_BEGIN: //27 StatementPart����� CompoundStatement
@@ -803,6 +890,7 @@ public class Parser {
 
     public void compoundStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_BEGIN: //28 CompoundStatement�������mp_begin StatementSequence��mp_end
@@ -817,12 +905,10 @@ public class Parser {
 
     public void statementSequence()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //29 StatementSequence����� Statement��StatementTail
-            statement();
-            statementTail();
-            break;
         case MP_FOR:
         case MP_WHILE:
         case MP_UNTIL:
@@ -833,6 +919,8 @@ public class Parser {
         case MP_SCOLON:
         case MP_END:
         case MP_BEGIN:
+            statement();
+            statementTail();
             break;
         default:
             syntaxError();
@@ -841,6 +929,7 @@ public class Parser {
 
     public void statementTail()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_SCOLON: //30 StatementTail�������mp_scolon Statement��StatementTail
@@ -850,6 +939,7 @@ public class Parser {
             break;
         case MP_UNTIL: //31 StatementTail�������&epsilon
         case MP_END:
+            lambda();
             break;
         default:
             syntaxError();
@@ -858,6 +948,7 @@ public class Parser {
 
     public void statement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_UNTIL: //32 Statement�������EmptyStatement
@@ -877,7 +968,7 @@ public class Parser {
             break;
         case MP_IDENTIFIER:
             assignmentStatement(); //TODO: Fix Ambiguity //36 Statement �����AssigmentStatement
-            procedureStatement(); //TODO: Fix Ambiguity //41 Statement �����ProcedureStatement
+            //procedureStatement(); //TODO: Fix Ambiguity //41 Statement �����ProcedureStatement
             break;
         case MP_IF:
             ifStatement(); //37 Statement �����IfStatement
@@ -898,12 +989,14 @@ public class Parser {
 
     public void emptyStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_UNTIL: //42 EmptyStatement�������&epsilon
         case MP_ELSE:
         case MP_SCOLON:
         case MP_END:
+            lambda();
             break;
         default:
             syntaxError();
@@ -912,6 +1005,7 @@ public class Parser {
 
     public void readStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_READ: //43 ReadStatement����� mp_read mp_lparen ReadParameter ReadParameterTail mp_rparen
@@ -928,6 +1022,7 @@ public class Parser {
 
     public void readParameterTail()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_READ: //44 ReadParameterTail����� mp_comma��ReadParameter ReadParameterTail
@@ -936,6 +1031,7 @@ public class Parser {
             readParameterTail();
             break;
         case MP_RPAREN: //45 ReadParameterTail����� &epsilon
+            lambda();
             break;
         default:
             syntaxError();
@@ -944,6 +1040,7 @@ public class Parser {
 
     public void readParameter()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //46 ReadParameter����� VariableIdentifier
@@ -956,6 +1053,7 @@ public class Parser {
 
     public void writeStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_WRITE: //47 WriteStatement����� mp_write mp_lparen WriteParameter WriteParameterTail mp_rparen
@@ -972,6 +1070,7 @@ public class Parser {
 
     public void writeParameterTail()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_COMMA: //48 WriteParameterTail����� mp_comma��WriteParameter
@@ -979,6 +1078,7 @@ public class Parser {
             writeParameter();
             break;
         case MP_RPAREN: //49 WriteParameterTail����� &epsilon
+            lambda();
             break;
         default:
             syntaxError();
@@ -987,6 +1087,7 @@ public class Parser {
 
     public void writeParameter()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //50 WriteParameter����� OrdinalExpression
@@ -1004,6 +1105,7 @@ public class Parser {
 
     public void assignmentStatement()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: { //51 AssignmentStatement����� VariableIdentifier��mp_assign Expression //TODO:Fix Ambiguity
@@ -1011,11 +1113,11 @@ public class Parser {
             match(TokenType.MP_ASSIGN);
             expression();
         }
-            { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
-            functionIdentifier();
-            match(TokenType.MP_ASSIGN);
-            expression();
-        }
+        //        { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
+        //            functionIdentifier();
+        //            match(TokenType.MP_ASSIGN);
+        //            expression();
+        //        }
         break;
         default:
             syntaxError();
@@ -1025,6 +1127,7 @@ public class Parser {
     //Now starting at Rule line 103
     public void functionIdentifier()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //103 FunctionIdentifier����� mp_identifier
@@ -1037,6 +1140,7 @@ public class Parser {
 
     public void booleanExpression()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //104 BooleanExpression����� Expression
@@ -1054,6 +1158,7 @@ public class Parser {
 
     public void ordinalExpression()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //105 BooleanExpression����� Expression
@@ -1071,6 +1176,7 @@ public class Parser {
 
     public void identifierList()
     {
+        debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //106 IdentifierList����� mp_identifier��IdentifierTail
@@ -1084,14 +1190,16 @@ public class Parser {
 
     public void identifierTail()
     {
+        debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //107 IdentifierTail�������mp_comma mp_identifier��IdentifierTail
+        case MP_COMMA: //107 IdentifierTail�������mp_comma mp_identifier��IdentifierTail
             match(TokenType.MP_COMMA);
             match(TokenType.MP_IDENTIFIER);
             identifierTail();
             break;
         case MP_COLON: //108 IdentifierTail�������&epsilon
+            lambda();
             break;
         default:
             syntaxError();
