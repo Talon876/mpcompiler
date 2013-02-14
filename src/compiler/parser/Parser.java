@@ -1,53 +1,51 @@
 package compiler.parser;
 
+import compiler.Scanner;
 import compiler.Token;
 import compiler.TokenType;
 
-public class Rule {
+public class Parser {
 
-    Token globalLookAhead;
+    Token lookAhead;
+    Token lookAhead2;
+    Scanner scanner;
 
-    //    public void applyRule()
-    //    {
-    //
-    //        switch(globalLookAhead)
-    //        {
-    //            case :
-    //            default :
-    //                error();
-    //        }
-    //
-    //
-    //    }
+    public Parser(Scanner scanner) {
+        this.scanner = scanner;
+        //lookAhead = scanner.getNextToken()
 
-    public void match(TokenType tokenInput)
-    {
-
+        systemGoal();
     }
 
-    public void error()
-    {
-
+    public void match(TokenType tokenInput) {
+        if (lookAhead.getType() == tokenInput) {
+            //get next lookahead
+        } else {
+            syntaxError();
+        }
     }
 
-    /**
-     * 
-     */
+    public void syntaxError() {
+        System.out.println("Syntax error found on line " + lookAhead.getLineNumber() + ", column "
+                + lookAhead.getColumnNumber());
+        System.exit(1);
+    }
+
     public void systemGoal()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROGRAM:
             program();
             match(TokenType.MP_EOF);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void program()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROGRAM:
             programHeading();
             match(TokenType.MP_SCOLON);
@@ -55,25 +53,25 @@ public class Rule {
             match(TokenType.MP_PERIOD);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void programHeading()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROGRAM:
             match(TokenType.MP_PROGRAM);
             programIdentifier();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void block()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROCEDURE:
         case MP_VAR:
         case MP_FUNCTION:
@@ -82,13 +80,13 @@ public class Rule {
             statementPart();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void variableDeclarationPart()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_VAR:
             match(TokenType.MP_PROGRAM);
             variableDeclaration();
@@ -96,13 +94,13 @@ public class Rule {
             variableDeclarationTail();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void variableDeclarationTail()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             variableDeclaration();
             match(TokenType.MP_SCOLON);
@@ -113,26 +111,26 @@ public class Rule {
         case MP_FUNCTION:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void variableDeclaration()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             identifierList();
             match(TokenType.MP_SCOLON);
             type();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void type()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_INTEGER:
             match(TokenType.MP_INTEGER);
@@ -144,13 +142,13 @@ public class Rule {
             match(TokenType.MP_FLOAT);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void procedureAndFunctionDeclarationPart()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROCEDURE:
             procedureDeclaration();
             procedureAndFunctionDeclarationPart();
@@ -162,13 +160,13 @@ public class Rule {
         case MP_BEGIN:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void procedureDeclaration()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROCEDURE:
             procedureHeading();
             match(TokenType.MP_SCOLON);
@@ -176,13 +174,13 @@ public class Rule {
             match(TokenType.MP_SCOLON);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void functionDeclaration()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_FUNCTION:
             functionHeading();
             match(TokenType.MP_SCOLON);
@@ -190,26 +188,26 @@ public class Rule {
             match(TokenType.MP_SCOLON);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void procedureHeading()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_PROCEDURE:
             match(TokenType.MP_PROCEDURE);
             procedureIdentifier();
             optionalFormalParameterList();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void functionHeading()
     {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_FUNCTION:
             match(TokenType.MP_FUNCTION);
             functionIdentifier();
@@ -218,13 +216,13 @@ public class Rule {
             type();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void optionalFormalParameterList()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_LPAREN:
             match(TokenType.MP_LPAREN);
@@ -236,7 +234,7 @@ public class Rule {
         case MP_COLON:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
@@ -244,7 +242,7 @@ public class Rule {
 
     public void ifStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IF:
             match(TokenType.MP_IF);
@@ -254,13 +252,13 @@ public class Rule {
             optionalElsePart();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void optionalElsePart()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_ELSE:
             match(TokenType.MP_ELSE);
@@ -272,13 +270,13 @@ public class Rule {
         case MP_END:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void repeatStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_REPEAT:
             match(TokenType.MP_REPEAT);
@@ -287,13 +285,13 @@ public class Rule {
             booleanExpression();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void whileStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_WHILE:
             match(TokenType.MP_WHILE);
@@ -302,13 +300,13 @@ public class Rule {
             statement();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void forStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_FOR:
             match(TokenType.MP_FOR);
@@ -321,25 +319,25 @@ public class Rule {
             statement();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void controlVariable()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER:
             variableIdentifier();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void initialValue()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER:
         case MP_LPAREN:
@@ -350,13 +348,13 @@ public class Rule {
             ordinalExpression();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void stepValue()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_TO:
             match(TokenType.MP_TO);
@@ -365,12 +363,12 @@ public class Rule {
             match(TokenType.MP_DOWNTO);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void finalValue() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
@@ -380,23 +378,23 @@ public class Rule {
             ordinalExpression(); //FinalValue -> OrdinalExpression
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void procedureStatement() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             procedureIdentifier(); //ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
             optionalActualParameterList();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void optionalActualParameterList() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
         case MP_AND:
@@ -428,12 +426,12 @@ public class Rule {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void actualParameterTail() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_COMMA:
             match(TokenType.MP_COMMA); //ActualParameterTail -> mp_comma ActualParameter ActualParameterTail
             actualParameter();
@@ -442,12 +440,12 @@ public class Rule {
         case MP_RPAREN:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void actualParameter() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
@@ -457,12 +455,12 @@ public class Rule {
             ordinalExpression(); //ActualParameter -> OrdinalExpression
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void expression() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
@@ -473,12 +471,12 @@ public class Rule {
             optionalRelationalPart();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void optionalRelationalPart() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
         case MP_DOWNTO:
@@ -499,12 +497,12 @@ public class Rule {
             relationalOperator(); //OptionalRelationalPart -> RelationalOperator SimpleExpression
             simpleExpression();
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void relationalOperator() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_NEQUAL:
             match(TokenType.MP_NEQUAL);
             break;
@@ -524,12 +522,12 @@ public class Rule {
             match(TokenType.MP_EQUAL);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void simpleExpression() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
@@ -541,12 +539,12 @@ public class Rule {
             termTail();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void termTail() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
         case MP_NEQUAL:
@@ -571,12 +569,12 @@ public class Rule {
             term();
             termTail();
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void optionalSign() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
@@ -589,12 +587,12 @@ public class Rule {
             match(TokenType.MP_PLUS); //OptionalSign -> mp_plus
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void addingOperator() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_OR:
             match(TokenType.MP_OR); //AddingOperator -> mp_or
             break;
@@ -605,12 +603,12 @@ public class Rule {
             match(TokenType.MP_PLUS); //AddingOperator -> mp_plus
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void term() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
@@ -619,12 +617,12 @@ public class Rule {
             factorTail();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void factorTail() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_COMMA:
         case MP_RPAREN:
         case MP_OR:
@@ -654,12 +652,12 @@ public class Rule {
             factorTail();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void multiplyingOperator() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_AND:
             match(TokenType.MP_AND);
             break;
@@ -673,12 +671,12 @@ public class Rule {
             match(TokenType.MP_TIMES);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void factor() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             variableIdentifier(); //Factor -> VariableIdentifier
             //TODO make this not ambiguous
@@ -698,41 +696,41 @@ public class Rule {
             match(TokenType.MP_INTEGER_LIT); //Factor -> mp_integer_lit
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void programIdentifier() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void variableIdentifier() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             match(TokenType.MP_IDENTIFIER);
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void procedureIdentifier() {
-        switch (globalLookAhead.getType()) {
+        switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
             match(TokenType.MP_IDENTIFIER);
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void formalParameterSectionTail()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_FUNCTION: //21 FormalParameterSectionTail �����mp_scolon FormalParameterSectionFormalParameterSectionTail
             match(TokenType.MP_SCOLON);
@@ -742,13 +740,13 @@ public class Rule {
         case MP_RPAREN: //22 FormalParameterSectionTail ��� &epsilon
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void formalParameterSection()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //23 FormalParameterSection����� ValueParameterSection
             valueParameterSection();
@@ -757,13 +755,13 @@ public class Rule {
             variableParameterSection();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void valueParameterSection()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //25 ValueParameterSection����� IdentifierList��mp_colon��Type
             identifierList();
@@ -771,13 +769,13 @@ public class Rule {
             type();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void variableParameterSection()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_VAR: //26 VariableParameterSection�������mp_var IdentifierList��mp_colon��Type
             match(TokenType.MP_VAR);
@@ -786,25 +784,25 @@ public class Rule {
             type();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void statementPart()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_BEGIN: //27 StatementPart����� CompoundStatement
             compoundStatement();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void compoundStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_BEGIN: //28 CompoundStatement�������mp_begin StatementSequence��mp_end
             match(TokenType.MP_BEGIN);
@@ -812,13 +810,13 @@ public class Rule {
             match(TokenType.MP_END);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void statementSequence()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //29 StatementSequence����� Statement��StatementTail
             statement();
@@ -836,13 +834,13 @@ public class Rule {
         case MP_BEGIN:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void statementTail()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_SCOLON: //30 StatementTail�������mp_scolon Statement��StatementTail
             match(TokenType.MP_SCOLON);
@@ -853,13 +851,13 @@ public class Rule {
         case MP_END:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void statement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_UNTIL: //32 Statement�������EmptyStatement
         case MP_ELSE:
@@ -893,13 +891,13 @@ public class Rule {
             forStatement(); //40 Statement �����ForStatement
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void emptyStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_UNTIL: //42 EmptyStatement�������&epsilon
         case MP_ELSE:
@@ -907,13 +905,13 @@ public class Rule {
         case MP_END:
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void readStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_READ: //43 ReadStatement����� mp_read mp_lparen ReadParameter ReadParameterTail mp_rparen
             match(TokenType.MP_READ);
@@ -923,13 +921,13 @@ public class Rule {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void readParameterTail()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_READ: //44 ReadParameterTail����� mp_comma��ReadParameter ReadParameterTail
             match(TokenType.MP_COMMA);
@@ -939,25 +937,25 @@ public class Rule {
         case MP_RPAREN: //45 ReadParameterTail����� &epsilon
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void readParameter()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //46 ReadParameter����� VariableIdentifier
             variableIdentifier();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void writeStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_WRITE: //47 WriteStatement����� mp_write mp_lparen WriteParameter WriteParameterTail mp_rparen
             match(TokenType.MP_WRITE);
@@ -967,13 +965,13 @@ public class Rule {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void writeParameterTail()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_COMMA: //48 WriteParameterTail����� mp_comma��WriteParameter
             match(TokenType.MP_COMMA);
@@ -982,13 +980,13 @@ public class Rule {
         case MP_RPAREN: //49 WriteParameterTail����� &epsilon
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void writeParameter()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //50 WriteParameter����� OrdinalExpression
         case MP_LPAREN:
@@ -999,13 +997,13 @@ public class Rule {
             ordinalExpression();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void assignmentStatement()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: { //51 AssignmentStatement����� VariableIdentifier��mp_assign Expression //TODO:Fix Ambiguity
             variableIdentifier();
@@ -1019,26 +1017,26 @@ public class Rule {
         }
         break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     //Now starting at Rule line 103
     public void functionIdentifier()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //103 FunctionIdentifier����� mp_identifier
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void booleanExpression()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //104 BooleanExpression����� Expression
         case MP_LPAREN:
@@ -1049,13 +1047,13 @@ public class Rule {
             expression();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void ordinalExpression()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //105 BooleanExpression����� Expression
         case MP_LPAREN:
@@ -1066,26 +1064,26 @@ public class Rule {
             expression();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void identifierList()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //106 IdentifierList����� mp_identifier��IdentifierTail
             match(TokenType.MP_IDENTIFIER);
             identifierTail();
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 
     public void identifierTail()
     {
-        switch (globalLookAhead.getType())
+        switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //107 IdentifierTail�������mp_comma mp_identifier��IdentifierTail
             match(TokenType.MP_COMMA);
@@ -1095,7 +1093,7 @@ public class Rule {
         case MP_COLON: //108 IdentifierTail�������&epsilon
             break;
         default:
-            error();
+            syntaxError();
         }
     }
 }
