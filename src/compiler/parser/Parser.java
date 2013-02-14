@@ -15,6 +15,7 @@ public class Parser {
         //lookAhead = scanner.getNextToken()
 
         systemGoal();
+        System.out.println("The input program parsers!");
     }
 
     public void match(TokenType tokenInput) {
@@ -1010,7 +1011,7 @@ public class Parser {
             match(TokenType.MP_ASSIGN);
             expression();
         }
-        { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
+            { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
             functionIdentifier();
             match(TokenType.MP_ASSIGN);
             expression();
