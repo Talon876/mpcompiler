@@ -36,9 +36,10 @@ public class Parser {
                 + lookAhead.getColumnNumber() + ": " + lookAhead.getLexeme());
     }
 
-    public void syntaxError() {
+    public void syntaxError(String expectedToken) {
         System.out.println("Syntax error found on line " + lookAhead.getLineNumber() + ", column "
-                + lookAhead.getColumnNumber() + ": " + lookAhead.getLexeme());
+                + lookAhead.getColumnNumber() + ": expected one of the following tokens {" + expectedToken
+                + "}, but found '" + lookAhead.getLexeme() + "'");
         if (DEBUG) {
             System.out.println("Current lookahead token: " + lookAhead.toString());
         }
@@ -69,7 +70,7 @@ public class Parser {
             match(TokenType.MP_EOF);
             break;
         default:
-            syntaxError();
+            syntaxError("program");
         }
     }
 
@@ -84,7 +85,7 @@ public class Parser {
             match(TokenType.MP_PERIOD);
             break;
         default:
-            syntaxError();
+            syntaxError("program");
         }
     }
 
@@ -97,7 +98,7 @@ public class Parser {
             programIdentifier();
             break;
         default:
-            syntaxError();
+            syntaxError("program");
         }
     }
 
@@ -111,7 +112,7 @@ public class Parser {
             statementPart();
             break;
         default:
-            syntaxError();
+            syntaxError("var");
         }
     }
 
@@ -126,7 +127,7 @@ public class Parser {
             variableDeclarationTail();
             break;
         default:
-            syntaxError();
+            syntaxError("var");
         }
     }
 
@@ -145,7 +146,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, begin, procedure, function");
         }
     }
 
@@ -159,7 +160,7 @@ public class Parser {
             type();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -178,7 +179,7 @@ public class Parser {
             match(TokenType.MP_FLOAT);
             break;
         default:
-            syntaxError();
+            syntaxError("Integer, Fixed, Float");
         }
     }
 
@@ -198,7 +199,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("procedure, function, begin");
         }
     }
 
@@ -213,7 +214,7 @@ public class Parser {
             match(TokenType.MP_SCOLON);
             break;
         default:
-            syntaxError();
+            syntaxError("procedure");
         }
     }
 
@@ -228,7 +229,7 @@ public class Parser {
             match(TokenType.MP_SCOLON);
             break;
         default:
-            syntaxError();
+            syntaxError("function");
         }
     }
 
@@ -242,7 +243,7 @@ public class Parser {
             optionalFormalParameterList();
             break;
         default:
-            syntaxError();
+            syntaxError("procedure");
         }
     }
 
@@ -258,7 +259,7 @@ public class Parser {
             type();
             break;
         default:
-            syntaxError();
+            syntaxError("function");
         }
     }
 
@@ -278,7 +279,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("(, ;, :");
         }
     }
 
@@ -297,7 +298,7 @@ public class Parser {
             optionalElsePart();
             break;
         default:
-            syntaxError();
+            syntaxError("if");
         }
     }
 
@@ -317,7 +318,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("else, until, ;, end");
         }
     }
 
@@ -333,7 +334,7 @@ public class Parser {
             booleanExpression();
             break;
         default:
-            syntaxError();
+            syntaxError("repeat");
         }
     }
 
@@ -349,7 +350,7 @@ public class Parser {
             statement();
             break;
         default:
-            syntaxError();
+            syntaxError("while");
         }
     }
 
@@ -369,7 +370,7 @@ public class Parser {
             statement();
             break;
         default:
-            syntaxError();
+            syntaxError("for");
         }
     }
 
@@ -382,7 +383,7 @@ public class Parser {
             variableIdentifier();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -400,7 +401,7 @@ public class Parser {
             ordinalExpression();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -416,7 +417,7 @@ public class Parser {
             match(TokenType.MP_DOWNTO);
             break;
         default:
-            syntaxError();
+            syntaxError("to, downto");
         }
     }
 
@@ -432,7 +433,7 @@ public class Parser {
             ordinalExpression(); //FinalValue -> OrdinalExpression
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -444,7 +445,7 @@ public class Parser {
             optionalActualParameterList();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -483,7 +484,7 @@ public class Parser {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            syntaxError();
+            syntaxError("',', ), and, mod, div, *, 'or', -, +, <>, >=, <=, <, >, =, downto, to, do, until, else, then, ;, end");
         }
     }
 
@@ -499,7 +500,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("',', )");
         }
     }
 
@@ -515,7 +516,7 @@ public class Parser {
             ordinalExpression(); //ActualParameter -> OrdinalExpression
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -532,7 +533,7 @@ public class Parser {
             optionalRelationalPart();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -561,7 +562,7 @@ public class Parser {
             simpleExpression();
             break;
         default:
-            syntaxError();
+            syntaxError("',', ), downto, to, do, until, else, then, ;, end, <>, >=, <=, >, <, =");
         }
     }
 
@@ -587,7 +588,7 @@ public class Parser {
             match(TokenType.MP_EQUAL);
             break;
         default:
-            syntaxError();
+            syntaxError("<>, >=, <= , >, <, =");
         }
     }
 
@@ -605,7 +606,7 @@ public class Parser {
             termTail();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -638,7 +639,7 @@ public class Parser {
             termTail();
             break;
         default:
-            syntaxError();
+            syntaxError("',', ), <>, >=, <=, >, <, =, downto, to, do, until, else, then, ;, end, or, -, +");
         }
     }
 
@@ -658,7 +659,7 @@ public class Parser {
             match(TokenType.MP_PLUS); //OptionalSign -> mp_plus
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -675,7 +676,7 @@ public class Parser {
             match(TokenType.MP_PLUS); //AddingOperator -> mp_plus
             break;
         default:
-            syntaxError();
+            syntaxError("or, -, +");
         }
     }
 
@@ -690,7 +691,7 @@ public class Parser {
             factorTail();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer");
         }
     }
 
@@ -727,7 +728,7 @@ public class Parser {
             factorTail();
             break;
         default:
-            syntaxError();
+            syntaxError("',', ), or, -, +, <>, >=, <=, >, <, =, downto, to, do, until, else, then, ;, end, and, mod, div, *");
         }
     }
 
@@ -747,7 +748,7 @@ public class Parser {
             match(TokenType.MP_TIMES);
             break;
         default:
-            syntaxError();
+            syntaxError("and, mod, div, *");
         }
     }
 
@@ -773,7 +774,7 @@ public class Parser {
             match(TokenType.MP_INTEGER_LIT); //Factor -> mp_integer_lit
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer");
         }
     }
 
@@ -784,7 +785,7 @@ public class Parser {
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -795,7 +796,7 @@ public class Parser {
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -806,7 +807,7 @@ public class Parser {
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -824,7 +825,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("function, )");
         }
     }
 
@@ -840,7 +841,7 @@ public class Parser {
             variableParameterSection();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, var");
         }
     }
 
@@ -855,7 +856,7 @@ public class Parser {
             type();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -871,7 +872,7 @@ public class Parser {
             type();
             break;
         default:
-            syntaxError();
+            syntaxError("var");
         }
     }
 
@@ -884,7 +885,7 @@ public class Parser {
             compoundStatement();
             break;
         default:
-            syntaxError();
+            syntaxError("begin");
         }
     }
 
@@ -899,7 +900,7 @@ public class Parser {
             match(TokenType.MP_END);
             break;
         default:
-            syntaxError();
+            syntaxError("begin");
         }
     }
 
@@ -923,7 +924,7 @@ public class Parser {
             statementTail();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, for, while, until, repeat, if, write, read, ;, end, begin");
         }
     }
 
@@ -942,7 +943,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError(";, until, end");
         }
     }
 
@@ -983,7 +984,7 @@ public class Parser {
             forStatement(); //40 Statement �����ForStatement
             break;
         default:
-            syntaxError();
+            syntaxError("until, else, ;, end, begin, Read, Write, identifier, if, while, repeat, for");
         }
     }
 
@@ -999,7 +1000,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("until, else, ;, end");
         }
     }
 
@@ -1016,7 +1017,7 @@ public class Parser {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            syntaxError();
+            syntaxError("Read");
         }
     }
 
@@ -1034,7 +1035,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("Read, )");
         }
     }
 
@@ -1047,7 +1048,7 @@ public class Parser {
             variableIdentifier();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -1064,7 +1065,7 @@ public class Parser {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            syntaxError();
+            syntaxError("Write");
         }
     }
 
@@ -1081,7 +1082,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("',', )");
         }
     }
 
@@ -1099,7 +1100,7 @@ public class Parser {
             ordinalExpression();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -1120,7 +1121,7 @@ public class Parser {
         //        }
         break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -1134,7 +1135,7 @@ public class Parser {
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -1152,7 +1153,7 @@ public class Parser {
             expression();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -1170,7 +1171,7 @@ public class Parser {
             expression();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier, (, not, Integer, -, +");
         }
     }
 
@@ -1184,7 +1185,7 @@ public class Parser {
             identifierTail();
             break;
         default:
-            syntaxError();
+            syntaxError("identifier");
         }
     }
 
@@ -1202,7 +1203,7 @@ public class Parser {
             lambda();
             break;
         default:
-            syntaxError();
+            syntaxError("',', :");
         }
     }
 }

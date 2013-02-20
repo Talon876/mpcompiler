@@ -4,5 +4,5 @@ var train, tree, speaker, couch, ba_con: integer;
 begIn
     Write(tree);
     Read(I);
-    tree := couch + ba_con  (train + 5);
+    tree := couch + ba_con div (train + 5);
 end.
