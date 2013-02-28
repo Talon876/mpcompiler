@@ -34,7 +34,18 @@ public class SymbolTable implements Printable{
     {
         for(Row r: rows)
         {
+            System.out.println("ScopeName: " + scopeName);
             r.print();
         }
+    }
+    
+    public void main(String[] args)
+    {
+        rows.add(new VariableRow("varStuff", Classification.VARIABLE, Type.INTEGER));
+        rows.add(new ParameterRow("paramStuff", Classification.PARAMETER, Type.FLOAT));
+        rows.add(new FunctionRow("funcStuff", Classification.FUNCTION, Type.BOOLEAN, new Attribute[]{new Attribute(Type.BOOLEAN, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.PARAMETER)}));
+        rows.add(new ProcedureRow("procStuff", Classification.FUNCTION, new Attribute[]{new Attribute(Type.INTEGER, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.VARIABLE)}));
+        
+        print();
     }
 }
