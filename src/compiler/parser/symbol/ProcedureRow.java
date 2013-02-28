@@ -16,7 +16,12 @@ public class ProcedureRow extends Row {
 
     @Override
     public void print() {
-        // TODO Auto-generated method stub
+        System.out.print("Procedure: " + this.getLexeme() + " attributes: ");
+        for(Attribute a: attributes)
+        {
+            a.print();
+        }
+        System.out.println();
         
     }
 }

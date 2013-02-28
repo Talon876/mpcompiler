@@ -27,7 +27,11 @@ public class FunctionRow extends Row {
 
     @Override
     public void print() {
-        // TODO Auto-generated method stub
-        
+        System.out.print("Function: " + this.getLexeme() + " attributes: ");
+        for(Attribute a: attributes)
+        {
+            a.print();
+        }
+        System.out.println(" return type: " + this.getReturnType());
     }
 }
