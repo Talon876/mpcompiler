@@ -1,0 +1,22 @@
+Variable Declarations:
+Rules:
+#create is not used
+#destroy is not used
+8 VariableDeclaration -> IdentifierList mp_colon Type #insert
+
+Parameter Declarations:
+Rules:
+#create is not used
+#destroy is not used
+23 FormalParameterSection -> ValueParameterSection #insert
+24 FormalParameterSection -> VariableParameterSection #insert
+
+Function Declarations:
+Rules:
+18 FunctionHeading -> mp_function FunctionIdentifier #create OptionalFormalParameterList mp_colon Type #insert
+16 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
+
+Procedure Declarations:
+Rules:
+17 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
+15 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
