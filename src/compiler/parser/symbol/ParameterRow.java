@@ -20,7 +20,7 @@ public class ParameterRow extends Row {
 
     @Override
     public void print() {
-        // TODO Auto-generated method stub
+        System.out.println("Type: " + type + " Function: " + this.getLexeme() + " Classification: " + this.getClassification());
         
     }
 
