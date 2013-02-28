@@ -16,7 +16,7 @@ public class ProcedureRow extends Row {
 
     @Override
     public void print() {
-        System.out.print("Procedure: " + this.getLexeme() + " attributes: ");
+        System.out.print("Procedure: " + this.getLexeme() + "\tattributes: ");
         for(Attribute a: attributes)
         {
             a.print();

@@ -32,20 +32,22 @@ public class SymbolTable implements Printable{
     
     public void print()
     {
+        System.out.println("SymbolTable Name: " + scopeName);
         for(Row r: rows)
         {
-            System.out.println("ScopeName: " + scopeName);
+            System.out.print("\tRow ");
             r.print();
         }
     }
     
-    public void main(String[] args)
+    public static void main(String[] args)
     {
-        rows.add(new VariableRow("varStuff", Classification.VARIABLE, Type.INTEGER));
-        rows.add(new ParameterRow("paramStuff", Classification.PARAMETER, Type.FLOAT));
-        rows.add(new FunctionRow("funcStuff", Classification.FUNCTION, Type.BOOLEAN, new Attribute[]{new Attribute(Type.BOOLEAN, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.PARAMETER)}));
-        rows.add(new ProcedureRow("procStuff", Classification.FUNCTION, new Attribute[]{new Attribute(Type.INTEGER, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.VARIABLE)}));
+        SymbolTable table = new SymbolTable("Maintest");
+        table.rows.add(new VariableRow("varStuff", Classification.VARIABLE, Type.INTEGER));
+        table.rows.add(new ParameterRow("paramStuff", Classification.PARAMETER, Type.FLOAT));
+        table.rows.add(new FunctionRow("funcStuff", Classification.FUNCTION, Type.BOOLEAN, new Attribute[]{new Attribute(Type.BOOLEAN, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.PARAMETER)}));
+        table.rows.add(new ProcedureRow("procStuff", Classification.FUNCTION, new Attribute[]{new Attribute(Type.INTEGER, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.VARIABLE)}));
         
-        print();
+        table.print();
     }
 }

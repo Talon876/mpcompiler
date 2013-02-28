@@ -19,7 +19,7 @@ public class VariableRow extends Row {
 
     @Override
     public void print() {
-        System.out.println("Type: " + this.type + " Function: " + this.getLexeme() + " Classification: " + this.getClassification());
+        System.out.println("Variable: " + this.getLexeme() + "\tType " + this.type  + "\tClassification: " + this.getClassification());
     }
 
 }

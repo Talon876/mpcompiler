@@ -12,6 +12,6 @@ public class Attribute implements Printable{
 
     @Override
     public void print() {
-        System.out.print("("+type.toString() + " " + mode.toString()+")");
+        System.out.print("("+type.toString() + ", " + mode.toString()+")");
     }
 }

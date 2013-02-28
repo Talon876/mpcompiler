@@ -27,11 +27,11 @@ public class FunctionRow extends Row {
 
     @Override
     public void print() {
-        System.out.print("Function: " + this.getLexeme() + " attributes: ");
+        System.out.print("Function: " + this.getLexeme() + "\tattributes: ");
         for(Attribute a: attributes)
         {
             a.print();
         }
-        System.out.println(" return type: " + this.getReturnType());
+        System.out.println("\treturn type: " + this.getReturnType());
     }
 }
