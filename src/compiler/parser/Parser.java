@@ -3,7 +3,7 @@ package compiler.parser;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.util.Stack;
 
 import compiler.Scanner;
 import compiler.Token;
@@ -17,11 +17,11 @@ public class Parser {
     Token lookAhead2;
     Scanner scanner;
     PrintWriter out;
-    ArrayList<SymbolTable> symboltables;
+    Stack<SymbolTable> symboltables;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
-        this.symboltables = new ArrayList<SymbolTable>();
+        this.symboltables = new Stack<SymbolTable>();
         lookAhead = scanner.getToken();
         try {
             out = new PrintWriter(new FileWriter("parse-tree"));
@@ -65,39 +65,30 @@ public class Parser {
         System.exit(1);
     }
 
-    private void addSymbolTable(String scopeName)
+    private boolean addSymbolTable(String scopeName)
     {
         boolean exists = false;
-        for(SymbolTable t : symboltables)
+        for (SymbolTable t : symboltables)
         {
-            if(t.getScopeName() == scopeName)
+            if (t.getScopeName() == scopeName)
             {
                 exists = true;
                 break;
             }
         }
-        if(!exists)
+        if (!exists)
         {
-            symboltables.add(new SymbolTable(scopeName));
+            symboltables.push(new SymbolTable(scopeName));
+            return true;
         }
+        return false;
     }
-    
+
     private void removeSymbolTable(String scopeName)
     {
-        SymbolTable temp = null;
-        for(SymbolTable t : symboltables)
-        {
-            if(t.getScopeName() == scopeName)
-            {
-                temp = t;
-                break;
-            }
-        }
-        if(temp != null)
-        {
-            symboltables.remove(temp);
-        }
+        symboltables.pop();
     }
+
     public void debug() {
         if (DEBUG) {
             System.out.println("\tExpanding nonterminal: " + Thread.currentThread().getStackTrace()[2].getMethodName()
@@ -1265,13 +1256,13 @@ public class Parser {
             match(TokenType.MP_ASSIGN);
             expression();
         }
-        //        { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
-        //            out.println("52");
-        //            functionIdentifier();
-        //            match(TokenType.MP_ASSIGN);
-        //            expression();
-        //        }
-        break;
+            //        { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
+            //            out.println("52");
+            //            functionIdentifier();
+            //            match(TokenType.MP_ASSIGN);
+            //            expression();
+            //        }
+            break;
         default:
             syntaxError("identifier");
         }
