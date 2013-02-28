@@ -4,9 +4,12 @@ public class ParameterRow extends Row {
 
     private Type type;
 
-    public ParameterRow(String lexeme, Classification classification, Type type) {
+    private Attribute[] attributes;
+    
+    public ParameterRow(String lexeme, Classification classification, Type type, Attribute[] attributes) {
         super(lexeme, classification);
         this.type = type;
+        this.attributes = attributes;
     }
 
     public Type getType() {
@@ -17,4 +20,8 @@ public class ParameterRow extends Row {
         this.type = type;
     }
 
+    public Attribute[] getAttributes()
+    {
+        return attributes;
+    }
 }

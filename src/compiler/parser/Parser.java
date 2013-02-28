@@ -3,10 +3,12 @@ package compiler.parser;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import compiler.Scanner;
 import compiler.Token;
 import compiler.TokenType;
+import compiler.parser.symbol.SymbolTable;
 
 public class Parser {
     private static final boolean DEBUG = false;
@@ -15,9 +17,11 @@ public class Parser {
     Token lookAhead2;
     Scanner scanner;
     PrintWriter out;
+    ArrayList<SymbolTable> symboltables;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
+        this.symboltables = new ArrayList<SymbolTable>();
         lookAhead = scanner.getToken();
         try {
             out = new PrintWriter(new FileWriter("parse-tree"));
@@ -61,6 +65,39 @@ public class Parser {
         System.exit(1);
     }
 
+    private void addSymbolTable(String scopeName)
+    {
+        boolean exists = false;
+        for(SymbolTable t : symboltables)
+        {
+            if(t.getScopeName() == scopeName)
+            {
+                exists = true;
+                break;
+            }
+        }
+        if(!exists)
+        {
+            symboltables.add(new SymbolTable(scopeName));
+        }
+    }
+    
+    private void removeSymbolTable(String scopeName)
+    {
+        SymbolTable temp = null;
+        for(SymbolTable t : symboltables)
+        {
+            if(t.getScopeName() == scopeName)
+            {
+                temp = t;
+                break;
+            }
+        }
+        if(temp != null)
+        {
+            symboltables.remove(temp);
+        }
+    }
     public void debug() {
         if (DEBUG) {
             System.out.println("\tExpanding nonterminal: " + Thread.currentThread().getStackTrace()[2].getMethodName()
