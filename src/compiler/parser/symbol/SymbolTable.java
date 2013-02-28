@@ -21,6 +21,12 @@ public class SymbolTable {
     }
 
     public void insertRow(Row row) {
+        for (Row r : rows) {
+            if (r.getLexeme().equalsIgnoreCase(row.getLexeme())) {
+                System.out.println("Identifier '" + row.getLexeme() + "' has already been declared");
+                System.exit(1);
+            }
+        }
         rows.add(row);
     }
 }
