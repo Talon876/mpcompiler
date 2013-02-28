@@ -70,7 +70,7 @@ public class Parser {
         boolean exists = false;
         for (SymbolTable t : symboltables)
         {
-            if (t.getScopeName() == scopeName)
+            if (t.getScopeName().equalsIgnoreCase(scopeName))
             {
                 exists = true;
                 break;
@@ -89,6 +89,13 @@ public class Parser {
         symboltables.pop();
     }
 
+    public void printSymbolTables()
+    {
+        for(SymbolTable st : symboltables)
+        {
+            st.print();
+        }
+    }
     public void debug() {
         if (DEBUG) {
             System.out.println("\tExpanding nonterminal: " + Thread.currentThread().getStackTrace()[2].getMethodName()
@@ -204,7 +211,7 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //8 VariableDeclaration -> IdentifierList mp_colon Type
+        case MP_IDENTIFIER: //8 VariableDeclaration -> IdentifierList mp_colon Type #insert
             out.println("8");
             identifierList();
             match(TokenType.MP_COLON);
@@ -264,7 +271,7 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_PROCEDURE: //15 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon
+        case MP_PROCEDURE: //15 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
             out.println("15");
             procedureHeading();
             match(TokenType.MP_SCOLON);
@@ -280,7 +287,7 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_FUNCTION: //16 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon
+        case MP_FUNCTION: //16 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
             out.println("16");
             functionHeading();
             match(TokenType.MP_SCOLON);
@@ -296,7 +303,7 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_PROCEDURE: //17 ProcedureHeading -> mp_procedure ProcedureIdentifier OptionalFormalParameterList
+        case MP_PROCEDURE: //17 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
             out.println("17");
             match(TokenType.MP_PROCEDURE);
             procedureIdentifier();
@@ -947,11 +954,11 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //23 FormalParameterSection����� ValueParameterSection
+        case MP_IDENTIFIER: //23 FormalParameterSection -> ValueParameterSection #insert
             out.println("23");
             valueParameterSection();
             break;
-        case MP_VAR: //24 FormalParameterSection����� VariableParameterSection
+        case MP_VAR: //24 FormalParameterSection -> VariableParameterSection #insert
             out.println("24");
             variableParameterSection();
             break;

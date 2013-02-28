@@ -13,4 +13,10 @@ public class ProcedureRow extends Row {
     {
         return attributes;
     }
+
+    @Override
+    public void print() {
+        // TODO Auto-generated method stub
+        
+    }
 }

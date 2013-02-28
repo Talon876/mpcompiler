@@ -17,4 +17,10 @@ public class VariableRow extends Row {
         this.type = type;
     }
 
+    @Override
+    public void print() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

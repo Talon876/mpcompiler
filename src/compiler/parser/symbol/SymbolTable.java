@@ -2,7 +2,7 @@ package compiler.parser.symbol;
 
 import java.util.ArrayList;
 
-public class SymbolTable {
+public class SymbolTable implements Printable{
 
     private String scopeName;
     private ArrayList<Row> rows;
@@ -28,5 +28,13 @@ public class SymbolTable {
             }
         }
         rows.add(row);
+    }
+    
+    public void print()
+    {
+        for(Row r: rows)
+        {
+            r.print();
+        }
     }
 }

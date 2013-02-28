@@ -18,5 +18,11 @@ public class ParameterRow extends Row {
         this.type = type;
     }
 
+    @Override
+    public void print() {
+        // TODO Auto-generated method stub
+        
+    }
+
     
 }

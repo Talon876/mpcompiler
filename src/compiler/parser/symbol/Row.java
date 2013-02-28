@@ -1,6 +1,6 @@
 package compiler.parser.symbol;
 
-public abstract class Row {
+public abstract class Row implements Printable{
     private Classification classification;
     private String lexeme;
 
