@@ -231,16 +231,20 @@ public class Parser {
             out.println("9");
             match(TokenType.MP_INTEGER);
             break;
-        case MP_FIXED: //10 Type -> mp_float
-            out.println("10");
-            match(TokenType.MP_FIXED); //change that to a boolean that we need to create
+        case MP_BOOLEAN: //110 Type -> mp_boolean
+            out.println("110");
+            match(TokenType.MP_BOOLEAN);
             break;
-        case MP_FLOAT: //11 Type -> mp_boolean
-            out.println("11");
+        case MP_FLOAT: //108 Type -> mp_float
+            out.println("108");
             match(TokenType.MP_FLOAT);
             break;
+        case MP_STRING: //109 Type -> mp_string
+            out.println("109");
+            match(TokenType.MP_STRING);
+            break;
         default:
-            syntaxError("Integer, Fixed, Float");
+            syntaxError("Integer, Float, Boolean, String");
         }
     }
 
@@ -248,18 +252,18 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_PROCEDURE: //12 ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
-            out.println("12");
+        case MP_PROCEDURE: //10 ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
+            out.println("10");
             procedureDeclaration();
             procedureAndFunctionDeclarationPart();
             break;
-        case MP_FUNCTION: //13 ProcedureAndFunctionDeclarationPart -> FunctionDeclaration ProcedureAndFunctionDeclarationPart
-            out.println("13");
+        case MP_FUNCTION: //11 ProcedureAndFunctionDeclarationPart -> FunctionDeclaration ProcedureAndFunctionDeclarationPart
+            out.println("11");
             functionDeclaration();
             procedureAndFunctionDeclarationPart();
             break;
-        case MP_BEGIN: //14 ProcedureAndFunctionDeclarationPart -> lambda
-            out.println("14");
+        case MP_BEGIN: //12 ProcedureAndFunctionDeclarationPart -> lambda
+            out.println("12");
             lambda();
             break;
         default:
@@ -271,8 +275,8 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_PROCEDURE: //15 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
-            out.println("15");
+        case MP_PROCEDURE: //13 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
+            out.println("13");
             procedureHeading();
             match(TokenType.MP_SCOLON);
             block();
@@ -287,8 +291,8 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_FUNCTION: //16 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
-            out.println("16");
+        case MP_FUNCTION: //14 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
+            out.println("14");
             functionHeading();
             match(TokenType.MP_SCOLON);
             block();
@@ -303,8 +307,8 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_PROCEDURE: //17 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
-            out.println("17");
+        case MP_PROCEDURE: //15 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
+            out.println("15");
             match(TokenType.MP_PROCEDURE);
             procedureIdentifier();
             optionalFormalParameterList();
@@ -318,8 +322,8 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_FUNCTION: //18 FunctionHeading -> mp_function FunctionIdentifier OptionalFormalParameterList mp_colon Type
-            out.println("18");
+        case MP_FUNCTION: //16 FunctionHeading -> mp_function FunctionIdentifier OptionalFormalParameterList mp_colon Type
+            out.println("16");
             match(TokenType.MP_FUNCTION);
             functionIdentifier();
             optionalFormalParameterList();
@@ -336,16 +340,16 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_LPAREN: //19 OptionalFormalParameterList -> mp_lparen FormalParameterSection FormalParameterSectionTail mp_rparen
-            out.println("19");
+        case MP_LPAREN: //17 OptionalFormalParameterList -> mp_lparen FormalParameterSection FormalParameterSectionTail mp_rparen
+            out.println("17");
             match(TokenType.MP_LPAREN);
             formalParameterSection();
             formalParameterSectionTail();
             match(TokenType.MP_RPAREN);
             break;
         case MP_SCOLON:
-        case MP_COLON: //20 OptionalFormalParameterList -> lambda
-            out.println("20");
+        case MP_COLON: //18 OptionalFormalParameterList -> lambda
+            out.println("18");
             lambda();
             break;
         default:
@@ -358,8 +362,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IF: //53 IfStatement -> mp_if BooleanExpression mp_then Statement OptionalElsePart
-            out.println("53");
+        case MP_IF: //51 IfStatement -> mp_if BooleanExpression mp_then Statement OptionalElsePart
+            out.println("51");
             match(TokenType.MP_IF);
             booleanExpression();
             match(TokenType.MP_THEN);
@@ -376,16 +380,16 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_ELSE: //54 OptionalElsePart -> mp_else Statement
-            out.println("54");
+        case MP_ELSE: //52 OptionalElsePart -> mp_else Statement
+            out.println("52");
             match(TokenType.MP_ELSE);
             statement();
             match(TokenType.MP_END); //TODO fix this so that the epsilon isn't ambiguous
             break;
         case MP_UNTIL:
         case MP_SCOLON:
-        case MP_END: //55 OptionalElsePart -> lambda
-            out.println("55");
+        case MP_END: //53 OptionalElsePart -> lambda
+            out.println("53");
             lambda();
             break;
         default:
@@ -398,8 +402,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_REPEAT: //56 RepeatStatement -> mp_repeat StatementSequence mp_until BooleanExpression
-            out.println("56");
+        case MP_REPEAT: //54 RepeatStatement -> mp_repeat StatementSequence mp_until BooleanExpression
+            out.println("54");
             match(TokenType.MP_REPEAT);
             statementSequence();
             match(TokenType.MP_UNTIL);
@@ -415,8 +419,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_WHILE: //57 WhileStatement -> mp_while BooleanExpression mp_do Statement
-            out.println("57");
+        case MP_WHILE: //55 WhileStatement -> mp_while BooleanExpression mp_do Statement
+            out.println("55");
             match(TokenType.MP_WHILE);
             booleanExpression();
             match(TokenType.MP_DO);
@@ -432,8 +436,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_FOR: //58 ForStatement -> mp_for ControlVariable mp_assign InitialValue StepValue FinalValue mp_do Statement
-            out.println("58");
+        case MP_FOR: //56 ForStatement -> mp_for ControlVariable mp_assign InitialValue StepValue FinalValue mp_do Statement
+            out.println("56");
             match(TokenType.MP_FOR);
             controlVariable();
             match(TokenType.MP_ASSIGN);
@@ -453,8 +457,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //59 ControlVariable -> VariableIdentifier
-            out.println("59");
+        case MP_IDENTIFIER: //57 ControlVariable -> VariableIdentifier
+            out.println("57");
             variableIdentifier();
             break;
         default:
@@ -472,8 +476,8 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
-        case MP_PLUS: //60 InitialValue -> OrdinalExpression
-            out.println("60");
+        case MP_PLUS: //58 InitialValue -> OrdinalExpression
+            out.println("58");
             ordinalExpression();
             break;
         default:
@@ -486,12 +490,12 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_TO: //61 StepValue -> mp_to
-            out.println("61");
+        case MP_TO: //59 StepValue -> mp_to
+            out.println("59");
             match(TokenType.MP_TO);
             break;
-        case MP_DOWNTO: //62 StepValue -> mp_downto
-            out.println("62");
+        case MP_DOWNTO: //60 StepValue -> mp_downto
+            out.println("60");
             match(TokenType.MP_DOWNTO);
             break;
         default:
@@ -507,8 +511,8 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
-        case MP_PLUS: //63 FinalValue -> OrdinalExpression
-            out.println("63");
+        case MP_PLUS: //61 FinalValue -> OrdinalExpression
+            out.println("61");
             ordinalExpression();
             break;
         default:
@@ -519,8 +523,8 @@ public class Parser {
     public void procedureStatement() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //64 ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
-            out.println("64");
+        case MP_IDENTIFIER: //62 ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
+            out.println("62");
             procedureIdentifier();
             optionalActualParameterList();
             break;
@@ -554,12 +558,12 @@ public class Parser {
         case MP_ELSE:
         case MP_THEN:
         case MP_SCOLON:
-        case MP_END: //66 OptionalActualParameterList -> lambda
-            out.println("66");
+        case MP_END: //64 OptionalActualParameterList -> lambda
+            out.println("64");
             lambda();
             break;
-        case MP_LPAREN: //65 OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen
-            out.println("65");
+        case MP_LPAREN: //63 OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen
+            out.println("63");
             match(TokenType.MP_LPAREN);
             actualParameter();
             actualParameterTail();
@@ -573,14 +577,14 @@ public class Parser {
     public void actualParameterTail() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_COMMA: //67 ActualParameterTail -> mp_comma ActualParameter ActualParameterTail
-            out.println("67");
+        case MP_COMMA: //65 ActualParameterTail -> mp_comma ActualParameter ActualParameterTail
+            out.println("65");
             match(TokenType.MP_COMMA);
             actualParameter();
             actualParameterTail();
             break;
-        case MP_RPAREN: //68 ActualParameterTail -> lambda
-            out.println("68");
+        case MP_RPAREN: //66 ActualParameterTail -> lambda
+            out.println("66");
             lambda();
             break;
         default:
@@ -596,8 +600,8 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
-        case MP_PLUS: //69 ActualParameter -> OrdinalExpression
-            out.println("69");
+        case MP_PLUS: //67 ActualParameter -> OrdinalExpression
+            out.println("67");
             ordinalExpression();
             break;
         default:
@@ -613,8 +617,8 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
-        case MP_PLUS: //70 Expression -> SimpleExpression OptionalRelationalPart
-            out.println("70");
+        case MP_PLUS: //68 Expression -> SimpleExpression OptionalRelationalPart
+            out.println("68");
             simpleExpression();
             optionalRelationalPart();
             break;
@@ -635,8 +639,8 @@ public class Parser {
         case MP_ELSE:
         case MP_THEN:
         case MP_SCOLON:
-        case MP_END: //72 OptionalRelationalPart -> lambda
-            out.println("72");
+        case MP_END: //70 OptionalRelationalPart -> lambda
+            out.println("70");
             lambda();
             break;
         case MP_NEQUAL:
@@ -644,8 +648,8 @@ public class Parser {
         case MP_LEQUAL:
         case MP_GTHAN:
         case MP_LTHAN:
-        case MP_EQUAL: //71 OptionalRelationalPart -> RelationalOperator SimpleExpression
-            out.println("71");
+        case MP_EQUAL: //69 OptionalRelationalPart -> RelationalOperator SimpleExpression
+            out.println("69");
             relationalOperator();
             simpleExpression();
             break;
@@ -657,28 +661,28 @@ public class Parser {
     public void relationalOperator() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_NEQUAL: //78 RelationalOperator -> mp_nequal
-            out.println("78");
+        case MP_NEQUAL: //76 RelationalOperator -> mp_nequal
+            out.println("76");
             match(TokenType.MP_NEQUAL);
             break;
-        case MP_GEQUAL: //77 RelationalOperator -> mp_gequal
-            out.println("77");
+        case MP_GEQUAL: //75 RelationalOperator -> mp_gequal
+            out.println("75");
             match(TokenType.MP_GEQUAL);
             break;
-        case MP_LEQUAL: //76 RelationalOperator -> mp_lequal
-            out.println("76");
+        case MP_LEQUAL: //74 RelationalOperator -> mp_lequal
+            out.println("74");
             match(TokenType.MP_LEQUAL);
             break;
-        case MP_GTHAN: //75 RelationalOperator -> mp_gthan
-            out.println("75");
+        case MP_GTHAN: //73 RelationalOperator -> mp_gthan
+            out.println("73");
             match(TokenType.MP_GTHAN);
             break;
-        case MP_LTHAN: //74 RelationalOperator -> mp_lthan
-            out.println("74");
+        case MP_LTHAN: //72 RelationalOperator -> mp_lthan
+            out.println("72");
             match(TokenType.MP_LTHAN);
             break;
-        case MP_EQUAL: //73 RelationalOperator -> mp_equal
-            out.println("73");
+        case MP_EQUAL: //71 RelationalOperator -> mp_equal
+            out.println("71");
             match(TokenType.MP_EQUAL);
             break;
         default:
@@ -694,8 +698,8 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
-        case MP_PLUS: //79 SimpleExpression -> OptionalSign Term TermTail
-            out.println("79");
+        case MP_PLUS: //77 SimpleExpression -> OptionalSign Term TermTail
+            out.println("77");
             optionalSign();
             term();
             termTail();
@@ -723,14 +727,14 @@ public class Parser {
         case MP_ELSE:
         case MP_THEN:
         case MP_SCOLON:
-        case MP_END: //81 TermTail -> lambda
-            out.println("81");
+        case MP_END: //79 TermTail -> lambda
+            out.println("79");
             lambda();
             break;
         case MP_OR:
         case MP_MINUS:
-        case MP_PLUS: //80 TermTail -> AddingOperator Term TermTail
-            out.println("80");
+        case MP_PLUS: //78 TermTail -> AddingOperator Term TermTail
+            out.println("78");
             addingOperator();
             term();
             termTail();
@@ -746,16 +750,16 @@ public class Parser {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
-        case MP_INTEGER_LIT: //84 OptionalSign -> lambda
-            out.println("84");
+        case MP_INTEGER_LIT: //82 OptionalSign -> lambda
+            out.println("82");
             lambda();
             break;
-        case MP_MINUS: //83 OptionalSign -> mp_minus
-            out.println("83");
+        case MP_MINUS: //81 OptionalSign -> mp_minus
+            out.println("81");
             match(TokenType.MP_MINUS);
             break;
-        case MP_PLUS: //82 OptionalSign -> mp_plus
-            out.println("82");
+        case MP_PLUS: //80 OptionalSign -> mp_plus
+            out.println("80");
             match(TokenType.MP_PLUS);
             break;
         default:
@@ -766,16 +770,16 @@ public class Parser {
     public void addingOperator() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_OR: //87 AddingOperator -> mp_or
-            out.println("87");
+        case MP_OR: //85 AddingOperator -> mp_or
+            out.println("85");
             match(TokenType.MP_OR);
             break;
-        case MP_MINUS: //86 AddingOperator -> mp_minus
-            out.println("86");
+        case MP_MINUS: //84 AddingOperator -> mp_minus
+            out.println("84");
             match(TokenType.MP_MINUS);
             break;
-        case MP_PLUS: //85 AddingOperator -> mp_plus
-            out.println("85");
+        case MP_PLUS: //83 AddingOperator -> mp_plus
+            out.println("83");
             match(TokenType.MP_PLUS);
             break;
         default:
@@ -789,8 +793,8 @@ public class Parser {
         case MP_IDENTIFIER:
         case MP_LPAREN:
         case MP_NOT:
-        case MP_INTEGER_LIT: //88 Term -> Factor FactorTail
-            out.println("88");
+        case MP_INTEGER_LIT: //86 Term -> Factor FactorTail
+            out.println("86");
             factor();
             factorTail();
             break;
@@ -820,15 +824,15 @@ public class Parser {
         case MP_ELSE:
         case MP_THEN:
         case MP_SCOLON:
-        case MP_END: //90 FactorTail -> lambda
-            out.println("90");
+        case MP_END: //88 FactorTail -> lambda
+            out.println("88");
             lambda();
             break;
         case MP_AND:
         case MP_MOD:
         case MP_DIV:
-        case MP_TIMES: //89 FactorTail -> MultiplyingOperator Factor FactorTail
-            out.println("89");
+        case MP_TIMES: //87 FactorTail -> MultiplyingOperator Factor FactorTail
+            out.println("87");
             multiplyingOperator();
             factor();
             factorTail();
@@ -841,20 +845,20 @@ public class Parser {
     public void multiplyingOperator() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_AND: //94 MultiplyingOperator -> mp_and
-            out.println("94");
+        case MP_AND: //92 MultiplyingOperator -> mp_and
+            out.println("92");
             match(TokenType.MP_AND);
             break;
-        case MP_MOD: //93 MultiplyingOperator -> mp_mod
-            out.println("93");
+        case MP_MOD: //91 MultiplyingOperator -> mp_mod
+            out.println("91");
             match(TokenType.MP_MOD);
             break;
-        case MP_DIV: //92 MultiplyingOperator -> mp_div
-            out.println("92");
+        case MP_DIV: //90 MultiplyingOperator -> mp_div
+            out.println("90");
             match(TokenType.MP_DIV);
             break;
-        case MP_TIMES: //91 MultiplyingOperator -> mp_times
-            out.println("91");
+        case MP_TIMES: //89 MultiplyingOperator -> mp_times
+            out.println("89");
             match(TokenType.MP_TIMES);
             break;
         default:
@@ -865,27 +869,27 @@ public class Parser {
     public void factor() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //96 Factor -> VariableIdentifier
-            out.println("96");
+        case MP_IDENTIFIER: //94 Factor -> VariableIdentifier
+            out.println("94");
             variableIdentifier();
             //TODO make this not ambiguous
-            //functionIdentifier(); //99 Factor -> FunctionIdentifier OptionalActualParameterList
-            //out.println("99");
+            //functionIdentifier(); //97 Factor -> FunctionIdentifier OptionalActualParameterList
+            //out.println("97");
             // optionalActualParameterList();
             break;
-        case MP_LPAREN: //98 Factor -> mp_lparen Expression mp_rparen
-            out.println("98");
+        case MP_LPAREN: //96 Factor -> mp_lparen Expression mp_rparen
+            out.println("96");
             match(TokenType.MP_LPAREN);
             expression();
             match(TokenType.MP_RPAREN);
             break;
-        case MP_NOT: //97 Factor -> mp_not Factor
-            out.println("97");
+        case MP_NOT: //95 Factor -> mp_not Factor
+            out.println("95");
             match(TokenType.MP_NOT);
             factor();
             break;
-        case MP_INTEGER_LIT: //95 Factor -> mp_integer_lit
-            out.println("95");
+        case MP_INTEGER_LIT: //93 Factor -> mp_integer_lit
+            out.println("93");
             match(TokenType.MP_INTEGER_LIT);
             break;
         default:
@@ -896,8 +900,8 @@ public class Parser {
     public void programIdentifier() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //100 ProgramIdentifier -> mp_identifier
-            out.println("100");
+        case MP_IDENTIFIER: //98 ProgramIdentifier -> mp_identifier
+            out.println("98");
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
@@ -908,8 +912,8 @@ public class Parser {
     public void variableIdentifier() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //101 VariableIdentifier -> mp_identifier
-            out.println("101");
+        case MP_IDENTIFIER: //99 VariableIdentifier -> mp_identifier
+            out.println("99");
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
@@ -920,8 +924,8 @@ public class Parser {
     public void procedureIdentifier() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //102 ProcedureIdentifier -> mp_identifier
-            out.println("102");
+        case MP_IDENTIFIER: //100 ProcedureIdentifier -> mp_identifier
+            out.println("100");
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
@@ -934,14 +938,14 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_FUNCTION: //21 FormalParameterSectionTail �����mp_scolon FormalParameterSectionFormalParameterSectionTail
-            out.println("21");
+        case MP_FUNCTION: //19 FormalParameterSectionTail -> mp_scolon FormalParameterSection FormalParameterSectionTail
+            out.println("19");
             match(TokenType.MP_SCOLON);
             formalParameterSection();
             formalParameterSectionTail();
             break;
-        case MP_RPAREN: //22 FormalParameterSectionTail ��� &epsilon
-            out.println("22");
+        case MP_RPAREN: //20 FormalParameterSectionTail -> &epsilon
+            out.println("20");
             lambda();
             break;
         default:
@@ -954,12 +958,12 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //23 FormalParameterSection -> ValueParameterSection #insert
-            out.println("23");
+        case MP_IDENTIFIER: //21 FormalParameterSection -> ValueParameterSection #insert
+            out.println("21");
             valueParameterSection();
             break;
-        case MP_VAR: //24 FormalParameterSection -> VariableParameterSection #insert
-            out.println("24");
+        case MP_VAR: //22 FormalParameterSection -> VariableParameterSection #insert
+            out.println("22");
             variableParameterSection();
             break;
         default:
@@ -972,8 +976,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //25 ValueParameterSection����� IdentifierList��mp_colon��Type
-            out.println("25");
+        case MP_IDENTIFIER: //23 ValueParameterSection -> IdentifierList mp_colon Type
+            out.println("23");
             identifierList();
             match(TokenType.MP_COLON);
             type();
@@ -988,8 +992,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_VAR: //26 VariableParameterSection�������mp_var IdentifierList��mp_colon��Type
-            out.println("26");
+        case MP_VAR: //24 VariableParameterSection -> mp_var IdentifierList mp_colon Type
+            out.println("24");
             match(TokenType.MP_VAR);
             identifierList();
             match(TokenType.MP_COLON);
@@ -1005,8 +1009,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_BEGIN: //27 StatementPart����� CompoundStatement
-            out.println("27");
+        case MP_BEGIN: //25 StatementPart -> CompoundStatement
+            out.println("25");
             compoundStatement();
             break;
         default:
@@ -1019,8 +1023,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_BEGIN: //28 CompoundStatement�������mp_begin StatementSequence��mp_end
-            out.println("28");
+        case MP_BEGIN: //26 CompoundStatement -> mp_begin StatementSequence mp_end
+            out.println("26");
             match(TokenType.MP_BEGIN);
             statementSequence();
             match(TokenType.MP_END);
@@ -1035,7 +1039,7 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //29 StatementSequence����� Statement��StatementTail
+        case MP_IDENTIFIER: //27 StatementSequence -> Statement StatementTail
         case MP_FOR:
         case MP_WHILE:
         case MP_UNTIL:
@@ -1046,7 +1050,7 @@ public class Parser {
         case MP_SCOLON:
         case MP_END:
         case MP_BEGIN:
-            out.println("29");
+            out.println("27");
             statement();
             statementTail();
             break;
@@ -1060,15 +1064,15 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_SCOLON: //30 StatementTail�������mp_scolon Statement��StatementTail
-            out.println("30");
+        case MP_SCOLON: //28 StatementTail -> mp_scolon Statement StatementTail
+            out.println("28");
             match(TokenType.MP_SCOLON);
             statement();
             statementTail();
             break;
-        case MP_UNTIL: //31 StatementTail�������&epsilon
+        case MP_UNTIL: //29 StatementTail -> &epsilon
         case MP_END:
-            out.println("31");
+            out.println("29");
             lambda();
             break;
         default:
@@ -1081,46 +1085,46 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_UNTIL: //32 Statement�������EmptyStatement
+        case MP_UNTIL: //30 Statement -> EmptyStatement
         case MP_ELSE:
         case MP_SCOLON:
         case MP_END:
-            out.println("32");
+            out.println("30");
             emptyStatement();
             break;
-        case MP_BEGIN: //33 Statement�������CompoundStatement
-            out.println("33");
+        case MP_BEGIN: //31 Statement -> CompoundStatement
+            out.println("31");
             compoundStatement();
             break;
-        case MP_READ: //34 Statement�������ReadStatement
-            out.println("34");
+        case MP_READ: //32 Statement -> ReadStatement
+            out.println("32");
             readStatement();
             break;
-        case MP_WRITE: //35 Statement�������WriteStatement
-            out.println("35");
+        case MP_WRITE: //33 Statement -> WriteStatement
+            out.println("33");
             writeStatement();
             break;
         case MP_IDENTIFIER:
-            out.println("36");
-            assignmentStatement(); //TODO: Fix Ambiguity //36 Statement �����AssigmentStatement
-            //procedureStatement(); //TODO: Fix Ambiguity //41 Statement �����ProcedureStatement
-            //out.println("41");
+            out.println("34");
+            assignmentStatement(); //TODO: Fix Ambiguity //34 Statement  -> AssigmentStatement
+            //procedureStatement(); //TODO: Fix Ambiguity //39 Statement  -> ProcedureStatement
+            //out.println("39");
             break;
         case MP_IF:
-            ifStatement(); //37 Statement �����IfStatement
-            out.println("37");
+            ifStatement(); //35 Statement  -> IfStatement
+            out.println("35");
             break;
         case MP_WHILE:
-            whileStatement(); //38 Statement �����WhileStatement
-            out.println("38");
+            whileStatement(); //36 Statement  -> WhileStatement
+            out.println("36");
             break;
         case MP_REPEAT:
-            repeatStatement(); //39 Statement �����RepeatStatement
-            out.println("39");
+            repeatStatement(); //37 Statement  -> RepeatStatement
+            out.println("37");
             break;
         case MP_FOR:
-            forStatement(); //40 Statement �����ForStatement
-            out.println("40");
+            forStatement(); //38 Statement  -> ForStatement
+            out.println("38");
             break;
         default:
             syntaxError("until, else, ;, end, begin, Read, Write, identifier, if, while, repeat, for");
@@ -1132,11 +1136,11 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_UNTIL: //42 EmptyStatement�������&epsilon
+        case MP_UNTIL: //40 EmptyStatement -> &epsilon
         case MP_ELSE:
         case MP_SCOLON:
         case MP_END:
-            out.println("42");
+            out.println("40");
             lambda();
             break;
         default:
@@ -1149,8 +1153,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_READ: //43 ReadStatement����� mp_read mp_lparen ReadParameter ReadParameterTail mp_rparen
-            out.println("43");
+        case MP_READ: //41 ReadStatement ->  mp_read mp_lparen ReadParameter ReadParameterTail mp_rparen
+            out.println("41");
             match(TokenType.MP_READ);
             match(TokenType.MP_LPAREN);
             readParameter();
@@ -1167,14 +1171,14 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_READ: //44 ReadParameterTail����� mp_comma��ReadParameter ReadParameterTail
-            out.println("44");
+        case MP_READ: //42 ReadParameterTail -> mp_comma ReadParameter ReadParameterTail
+            out.println("42");
             match(TokenType.MP_COMMA);
             readParameter();
             readParameterTail();
             break;
-        case MP_RPAREN: //45 ReadParameterTail����� &epsilon
-            out.println("45");
+        case MP_RPAREN: //43 ReadParameterTail -> &epsilon
+            out.println("43");
             lambda();
             break;
         default:
@@ -1187,8 +1191,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //46 ReadParameter����� VariableIdentifier
-            out.println("46");
+        case MP_IDENTIFIER: //44 ReadParameter -> VariableIdentifier
+            out.println("44");
             variableIdentifier();
             break;
         default:
@@ -1201,8 +1205,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_WRITE: //47 WriteStatement����� mp_write mp_lparen WriteParameter WriteParameterTail mp_rparen
-            out.println("47");
+        case MP_WRITE: //45 WriteStatement -> mp_write mp_lparen WriteParameter WriteParameterTail mp_rparen
+            out.println("45");
             match(TokenType.MP_WRITE);
             match(TokenType.MP_LPAREN);
             writeParameter();
@@ -1219,13 +1223,13 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_COMMA: //48 WriteParameterTail����� mp_comma��WriteParameter
-            out.println("48");
+        case MP_COMMA: //46 WriteParameterTail -> mp_comma WriteParameter
+            out.println("46");
             match(TokenType.MP_COMMA);
             writeParameter();
             break;
-        case MP_RPAREN: //49 WriteParameterTail����� &epsilon
-            out.println("49");
+        case MP_RPAREN: //47 WriteParameterTail -> &epsilon
+            out.println("47");
             lambda();
             break;
         default:
@@ -1238,13 +1242,13 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //50 WriteParameter����� OrdinalExpression
+        case MP_IDENTIFIER: //48 WriteParameter -> OrdinalExpression
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
         case MP_PLUS:
-            out.println("50");
+            out.println("48");
             ordinalExpression();
             break;
         default:
@@ -1257,14 +1261,14 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: { //51 AssignmentStatement����� VariableIdentifier��mp_assign Expression //TODO:Fix Ambiguity
-            out.println("51");
+        case MP_IDENTIFIER: { //49 AssignmentStatement -> VariableIdentifier mp_assign Expression //TODO:Fix Ambiguity
+            out.println("49");
             variableIdentifier();
             match(TokenType.MP_ASSIGN);
             expression();
         }
-            //        { //52 AssignmentStatement����� FunctionIdentifier��mp_assign Expression //TODO:Fix Ambiguity
-            //            out.println("52");
+            //        { //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression //TODO:Fix Ambiguity
+            //            out.println("50");
             //            functionIdentifier();
             //            match(TokenType.MP_ASSIGN);
             //            expression();
@@ -1281,8 +1285,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //103 FunctionIdentifier����� mp_identifier
-            out.println("103");
+        case MP_IDENTIFIER: //101 FunctionIdentifier -> mp_identifier
+            out.println("101");
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
@@ -1295,13 +1299,13 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //104 BooleanExpression����� Expression
+        case MP_IDENTIFIER: //102 BooleanExpression ->  Expression
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
         case MP_PLUS:
-            out.println("104");
+            out.println("102");
             expression();
             break;
         default:
@@ -1314,13 +1318,13 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //105 OrdinalExpression����� Expression
+        case MP_IDENTIFIER: //103 OrdinalExpression ->  Expression
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
         case MP_MINUS:
         case MP_PLUS:
-            out.println("105");
+            out.println("103");
             expression();
             break;
         default:
@@ -1333,8 +1337,8 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: //106 IdentifierList����� mp_identifier��IdentifierTail
-            out.println("106");
+        case MP_IDENTIFIER: //104 IdentifierList -> mp_identifier IdentifierTail
+            out.println("104");
             match(TokenType.MP_IDENTIFIER);
             identifierTail();
             break;
@@ -1348,14 +1352,14 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_COMMA: //107 IdentifierTail�������mp_comma mp_identifier��IdentifierTail
-            out.println("107");
+        case MP_COMMA: //105 IdentifierTail -> mp_comma mp_identifier IdentifierTail
+            out.println("105");
             match(TokenType.MP_COMMA);
             match(TokenType.MP_IDENTIFIER);
             identifierTail();
             break;
-        case MP_COLON: //108 IdentifierTail�������&epsilon
-            out.println("108");
+        case MP_COLON: //106 IdentifierTail -> &epsilon
+            out.println("106");
             lambda();
             break;
         default:

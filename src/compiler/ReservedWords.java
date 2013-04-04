@@ -38,7 +38,9 @@ public class ReservedWords {
         reservedWords.add("write");
         reservedWords.add("true");
         reservedWords.add("false");
-
+        reservedWords.add("boolean");
+        reservedWords.add("string");
+        
         tokenMap.put("and", TokenType.MP_AND);
         tokenMap.put("begin", TokenType.MP_BEGIN);
         tokenMap.put("div", TokenType.MP_DIV);
@@ -67,6 +69,8 @@ public class ReservedWords {
         tokenMap.put("write", TokenType.MP_WRITE);
         tokenMap.put("true", TokenType.MP_TRUE);
         tokenMap.put("false", TokenType.MP_FALSE);
+        tokenMap.put("boolean", TokenType.MP_BOOLEAN);
+        tokenMap.put("string", TokenType.MP_STRING);
 
     }
 
