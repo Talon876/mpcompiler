@@ -1,5 +1,6 @@
 program test; 
-var train, tree, speaker, couch, ba_con: integer; 
+var train, tree, speaker, couch, ba_con: integer;
+hello: boolean;
 begin
 
 end.

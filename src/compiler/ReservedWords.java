@@ -9,6 +9,7 @@ public class ReservedWords {
     static HashMap<String, TokenType> tokenMap = new HashMap<String, TokenType>();
 
     static {
+        //add all reserved words in all lowercase
         reservedWords.add("and");
         reservedWords.add("begin");
         reservedWords.add("div");
@@ -35,6 +36,8 @@ public class ReservedWords {
         reservedWords.add("var");
         reservedWords.add("while");
         reservedWords.add("write");
+        reservedWords.add("true");
+        reservedWords.add("false");
 
         tokenMap.put("and", TokenType.MP_AND);
         tokenMap.put("begin", TokenType.MP_BEGIN);
@@ -62,6 +65,8 @@ public class ReservedWords {
         tokenMap.put("var", TokenType.MP_VAR);
         tokenMap.put("while", TokenType.MP_WHILE);
         tokenMap.put("write", TokenType.MP_WRITE);
+        tokenMap.put("true", TokenType.MP_TRUE);
+        tokenMap.put("false", TokenType.MP_FALSE);
 
     }
 
