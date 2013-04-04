@@ -6,9 +6,7 @@ VariableDeclarationPart -> mp_var VariableDeclaration mp_scolon VariableDeclarat
 VariableDeclarationTail -> VariableDeclaration mp_scolon VariableDeclarationTail
 | .
 VariableDeclaration -> IdentifierList mp_colon Type.
-Type -> mp_integer
-| mp_float
-| mp_boolean.
+Type -> mp_integer.
 ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
 | FunctionDeclaration ProcedureAndFunctionDeclarationPart
 | .
@@ -106,3 +104,13 @@ OrdinalExpression -> Expression.
 IdentifierList -> mp_identifier IdentifierTail.
 IdentifierTail -> mp_comma mp_identifier IdentifierTail
 | .
+VariableDeclarationPart -> .
+Type -> mp_float
+| mp_string
+| mp_boolean.
+WriteStatement -> mp_writeln mp_lparen WriteParameter WriteParameterTail mp_rparen.
+
+Factor -> mp_float_lit
+| mp_string_lit
+| mp_true
+| mp_false.
