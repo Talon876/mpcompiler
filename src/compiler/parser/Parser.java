@@ -159,6 +159,9 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
+        case MP_BEGIN: //Fix to allow programs without "var" sections
+        case MP_FUNCTION:
+        case MP_PROCEDURE: 
         case MP_VAR: //4 Block -> VariableDeclarationPart ProcedureAndFunctionDeclarationPart StatementPart
             out.println("4");
             variableDeclarationPart();
@@ -166,7 +169,7 @@ public class Parser {
             statementPart();
             break;
         default:
-            syntaxError("var");
+            syntaxError("var, begin, function, procedure");
         }
     }
 
@@ -181,8 +184,14 @@ public class Parser {
             match(TokenType.MP_SCOLON);
             variableDeclarationTail();
             break;
+        case MP_BEGIN:
+        case MP_FUNCTION: //Fix to allow programs without "var" sections
+        case MP_PROCEDURE: //107 VariableDeclarationPart -> lambda
+            out.println("107");
+            lambda();
+            break;
         default:
-            syntaxError("var");
+            syntaxError("var, begin, function, procedure");
         }
     }
 
@@ -472,6 +481,10 @@ public class Parser {
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -481,7 +494,7 @@ public class Parser {
             ordinalExpression();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -507,6 +520,10 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -516,7 +533,7 @@ public class Parser {
             ordinalExpression();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -596,6 +613,10 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -605,7 +626,7 @@ public class Parser {
             ordinalExpression();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -613,6 +634,10 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -623,7 +648,7 @@ public class Parser {
             optionalRelationalPart();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -694,6 +719,10 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -705,7 +734,7 @@ public class Parser {
             termTail();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -748,6 +777,10 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT: //82 OptionalSign -> lambda
@@ -763,7 +796,7 @@ public class Parser {
             match(TokenType.MP_PLUS);
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -791,6 +824,10 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT: //86 Term -> Factor FactorTail
@@ -799,7 +836,7 @@ public class Parser {
             factorTail();
             break;
         default:
-            syntaxError("identifier, (, not, Integer");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer");
         }
     }
 
@@ -892,8 +929,24 @@ public class Parser {
             out.println("93");
             match(TokenType.MP_INTEGER_LIT);
             break;
+        case MP_FALSE: //116 Factor -> mp_false
+            out.println("116");
+            match(TokenType.MP_FALSE);
+            break;
+        case MP_TRUE: //115 Factor -> mp_true
+            out.println("115");
+            match(TokenType.MP_TRUE);
+            break;
+        case MP_STRING_LIT: //114 Factor -> mp_string_lit
+            out.println("114");
+            match(TokenType.MP_STRING_LIT);
+            break;
+        case MP_FLOAT_LIT: //113 Factor -> mp_float_lit
+            out.println("113");
+            match(TokenType.MP_FLOAT_LIT);
+            break;
         default:
-            syntaxError("identifier, (, not, Integer");
+            syntaxError("identifier, (, not, Integer, false, true, String, Float");
         }
     }
 
@@ -1045,6 +1098,7 @@ public class Parser {
         case MP_UNTIL:
         case MP_REPEAT:
         case MP_IF:
+        case MP_WRITELN: //added writeln
         case MP_WRITE:
         case MP_READ:
         case MP_SCOLON:
@@ -1055,7 +1109,7 @@ public class Parser {
             statementTail();
             break;
         default:
-            syntaxError("identifier, for, while, until, repeat, if, write, read, ;, end, begin");
+            syntaxError("identifier, for, while, until, repeat, if, write, writeln, read, ;, end, begin");
         }
     }
 
@@ -1100,6 +1154,7 @@ public class Parser {
             out.println("32");
             readStatement();
             break;
+        case MP_WRITELN:
         case MP_WRITE: //33 Statement -> WriteStatement
             out.println("33");
             writeStatement();
@@ -1127,7 +1182,7 @@ public class Parser {
             out.println("38");
             break;
         default:
-            syntaxError("until, else, ;, end, begin, Read, Write, identifier, if, while, repeat, for");
+            syntaxError("until, else, ;, end, begin, Read, Write, Writeln, identifier, if, while, repeat, for");
         }
     }
 
@@ -1213,8 +1268,16 @@ public class Parser {
             writeParameterTail();
             match(TokenType.MP_RPAREN);
             break;
+        case MP_WRITELN: //111 WriteStatement -> mp_writeln mp_lparen WriteParameter WriteParameterTail mp_rparen.
+            out.println("111");
+            match(TokenType.MP_WRITELN);
+            match(TokenType.MP_LPAREN);
+            writeParameter();
+            writeParameterTail();
+            match(TokenType.MP_RPAREN);
+            break;
         default:
-            syntaxError("Write");
+            syntaxError("Write, WriteLn");
         }
     }
 
@@ -1243,6 +1306,10 @@ public class Parser {
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //48 WriteParameter -> OrdinalExpression
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -1252,7 +1319,7 @@ public class Parser {
             ordinalExpression();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -1300,6 +1367,10 @@ public class Parser {
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //102 BooleanExpression ->  Expression
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -1309,7 +1380,7 @@ public class Parser {
             expression();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
@@ -1319,6 +1390,10 @@ public class Parser {
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //103 OrdinalExpression ->  Expression
+        case MP_FALSE:
+        case MP_TRUE:
+        case MP_STRING_LIT:
+        case MP_FLOAT_LIT: //added boolean values, string, float
         case MP_LPAREN:
         case MP_NOT:
         case MP_INTEGER_LIT:
@@ -1328,7 +1403,7 @@ public class Parser {
             expression();
             break;
         default:
-            syntaxError("identifier, (, not, Integer, -, +");
+            syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 

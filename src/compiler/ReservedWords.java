@@ -36,6 +36,7 @@ public class ReservedWords {
         reservedWords.add("var");
         reservedWords.add("while");
         reservedWords.add("write");
+        reservedWords.add("writeln");
         reservedWords.add("true");
         reservedWords.add("false");
         reservedWords.add("boolean");
@@ -67,6 +68,7 @@ public class ReservedWords {
         tokenMap.put("var", TokenType.MP_VAR);
         tokenMap.put("while", TokenType.MP_WHILE);
         tokenMap.put("write", TokenType.MP_WRITE);
+        tokenMap.put("writeln", TokenType.MP_WRITELN);
         tokenMap.put("true", TokenType.MP_TRUE);
         tokenMap.put("false", TokenType.MP_FALSE);
         tokenMap.put("boolean", TokenType.MP_BOOLEAN);
