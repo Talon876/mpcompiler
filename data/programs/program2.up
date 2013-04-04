@@ -1,6 +1,12 @@
 program test; 
-var train, tree, speaker, couch, ba_con: integer;
-hello: boolean;
+var train, tree, speaker, couch, ba_con: Integer;
+	hello, goodbye: Boolean;
+	crazy: String;
+	omg: Float;
 begin
-
+	hello := true;
+	goodbye :=false;
+	crazy := 'crazy train';
+	omg := 2E10;
+	WriteLN(crazy);
 end.
