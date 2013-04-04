@@ -3,12 +3,23 @@ package compiler.parser;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import compiler.Scanner;
 import compiler.Token;
 import compiler.TokenType;
+import compiler.parser.symbol.Attribute;
+import compiler.parser.symbol.Classification;
+import compiler.parser.symbol.FunctionRow;
+import compiler.parser.symbol.Mode;
+import compiler.parser.symbol.ParameterRow;
+import compiler.parser.symbol.ProcedureRow;
+import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
+import compiler.parser.symbol.Type;
+import compiler.parser.symbol.VariableRow;
 
 public class Parser {
     private static final boolean DEBUG = false;
@@ -18,10 +29,11 @@ public class Parser {
     Scanner scanner;
     PrintWriter out;
     Stack<SymbolTable> symboltables;
+    Row mostRecentFunctionProcedure = null;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
-        this.symboltables = new Stack<SymbolTable>();
+        symboltables = new Stack<SymbolTable>();
         lookAhead = scanner.getToken();
         try {
             out = new PrintWriter(new FileWriter("parse-tree"));
@@ -89,13 +101,56 @@ public class Parser {
         symboltables.pop();
     }
 
+    private void removeSymbolTable() {
+        symboltables.pop();
+    }
+
+    private void addSymbolsToTable(Classification c, List<String> ids, Type t) {
+        for (String lex : ids) {
+            switch (c) {
+            case VARIABLE:
+                VariableRow v = new VariableRow(lex, c, t);
+                symboltables.peek().insertRow(v);
+                break;
+            case PARAMETER:
+                ParameterRow p = new ParameterRow(lex, c, t);
+                symboltables.peek().insertRow(p);
+                if (mostRecentFunctionProcedure != null) { //shouldn't have parameters without first hitting a function/procedure anyway
+                    if (mostRecentFunctionProcedure instanceof FunctionRow) {
+                        ((FunctionRow) mostRecentFunctionProcedure).addAttribute(new Attribute(t, Mode.PARAMETER));
+                    } else if (mostRecentFunctionProcedure instanceof ProcedureRow) {
+                        ((ProcedureRow) mostRecentFunctionProcedure).addAttribute(new Attribute(t, Mode.PARAMETER));
+                    }
+                }
+                break;
+            case FUNCTION:
+                FunctionRow f = new FunctionRow(lex, c, t);
+                symboltables.peek().insertRow(f);
+                mostRecentFunctionProcedure = f;
+                break;
+            case PROCEDURE:
+                ProcedureRow proc = new ProcedureRow(lex, c);
+                symboltables.peek().insertRow(proc);
+                mostRecentFunctionProcedure = proc;
+                break;
+            }
+        }
+    }
+
+    private void addSymbolsToTable(Classification c, String lexeme, Type t) {
+        List<String> ids = new ArrayList<String>();
+        ids.add(lexeme);
+        addSymbolsToTable(c, ids, t);
+    }
+
     public void printSymbolTables()
     {
-        for(SymbolTable st : symboltables)
+        for (SymbolTable st : symboltables)
         {
             st.print();
         }
     }
+
     public void debug() {
         if (DEBUG) {
             System.out.println("\tExpanding nonterminal: " + Thread.currentThread().getStackTrace()[2].getMethodName()
@@ -131,28 +186,34 @@ public class Parser {
         switch (lookAhead.getType()) {
         case MP_PROGRAM: //2 Program -> Programheading mp_scolon Block mp_period
             out.println("2");
-            programHeading();
+            String scopeName = programHeading();
+            addSymbolTable(scopeName);
             match(TokenType.MP_SCOLON);
             block();
             match(TokenType.MP_PERIOD);
+            System.out.println("About to pop program symbol table:");
+            printSymbolTables();
+            removeSymbolTable(scopeName);
             break;
         default:
             syntaxError("program");
         }
     }
 
-    public void programHeading()
+    public String programHeading()
     {
+        String name = "";
         debug();
         switch (lookAhead.getType()) {
         case MP_PROGRAM: //3 ProgramHeading -> mp_program ProgramIdentifier
             out.println("3");
             match(TokenType.MP_PROGRAM);
-            programIdentifier();
+            name = programIdentifier();
             break;
         default:
             syntaxError("program");
         }
+        return name;
     }
 
     public void block()
@@ -161,7 +222,7 @@ public class Parser {
         switch (lookAhead.getType()) {
         case MP_BEGIN: //Fix to allow programs without "var" sections
         case MP_FUNCTION:
-        case MP_PROCEDURE: 
+        case MP_PROCEDURE:
         case MP_VAR: //4 Block -> VariableDeclarationPart ProcedureAndFunctionDeclarationPart StatementPart
             out.println("4");
             variableDeclarationPart();
@@ -222,39 +283,47 @@ public class Parser {
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER: //8 VariableDeclaration -> IdentifierList mp_colon Type #insert
             out.println("8");
-            identifierList();
+            //identifierList(), match colon, type()
+            List<String> ids = identifierList();
             match(TokenType.MP_COLON);
-            type();
+            Type t = type();
+            addSymbolsToTable(Classification.VARIABLE, ids, t);
             break;
         default:
             syntaxError("identifier");
         }
     }
 
-    public void type()
+    public Type type()
     {
+        Type type = null;
         debug();
         switch (lookAhead.getType())
         {
         case MP_INTEGER: //9 Type -> mp_integer
             out.println("9");
             match(TokenType.MP_INTEGER);
+            type = Type.INTEGER;
             break;
         case MP_BOOLEAN: //110 Type -> mp_boolean
             out.println("110");
             match(TokenType.MP_BOOLEAN);
+            type = Type.BOOLEAN;
             break;
         case MP_FLOAT: //108 Type -> mp_float
             out.println("108");
             match(TokenType.MP_FLOAT);
+            type = Type.FLOAT;
             break;
         case MP_STRING: //109 Type -> mp_string
             out.println("109");
             match(TokenType.MP_STRING);
+            type = Type.STRING;
             break;
         default:
             syntaxError("Integer, Float, Boolean, String");
         }
+        return type;
     }
 
     public void procedureAndFunctionDeclarationPart()
@@ -290,6 +359,10 @@ public class Parser {
             match(TokenType.MP_SCOLON);
             block();
             match(TokenType.MP_SCOLON);
+
+            System.out.println("About to pop procedure symbol table:");
+            printSymbolTables();
+            removeSymbolTable();
             break;
         default:
             syntaxError("procedure");
@@ -306,6 +379,10 @@ public class Parser {
             match(TokenType.MP_SCOLON);
             block();
             match(TokenType.MP_SCOLON);
+
+            System.out.println("About to pop function symbol table:");
+            printSymbolTables();
+            removeSymbolTable();
             break;
         default:
             syntaxError("function");
@@ -319,6 +396,11 @@ public class Parser {
         case MP_PROCEDURE: //15 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
             out.println("15");
             match(TokenType.MP_PROCEDURE);
+
+            String procId = lookAhead.getLexeme();
+            addSymbolsToTable(Classification.PROCEDURE, procId, null);
+            addSymbolTable(procId);
+
             procedureIdentifier();
             optionalFormalParameterList();
             break;
@@ -334,10 +416,16 @@ public class Parser {
         case MP_FUNCTION: //16 FunctionHeading -> mp_function FunctionIdentifier OptionalFormalParameterList mp_colon Type
             out.println("16");
             match(TokenType.MP_FUNCTION);
+
+            String funcId = lookAhead.getLexeme();
+            addSymbolsToTable(Classification.FUNCTION, funcId, null);
+            addSymbolTable(funcId);
+
             functionIdentifier();
             optionalFormalParameterList();
-            match(TokenType.MP_SCOLON);
-            type();
+            match(TokenType.MP_COLON);
+            Type t = type();
+            ((FunctionRow) mostRecentFunctionProcedure).setReturnType(t); //since we just added a FunctionRow, mostRecent will always be a FunctionRow
             break;
         default:
             syntaxError("function");
@@ -950,16 +1038,19 @@ public class Parser {
         }
     }
 
-    public void programIdentifier() {
+    public String programIdentifier() {
+        String progIdentifier = "";
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER: //98 ProgramIdentifier -> mp_identifier
             out.println("98");
+            progIdentifier = lookAhead.getLexeme();
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
             syntaxError("identifier");
         }
+        return progIdentifier;
     }
 
     public void variableIdentifier() {
@@ -991,7 +1082,7 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_FUNCTION: //19 FormalParameterSectionTail -> mp_scolon FormalParameterSection FormalParameterSectionTail
+        case MP_SCOLON: //19 FormalParameterSectionTail -> mp_scolon FormalParameterSection FormalParameterSectionTail
             out.println("19");
             match(TokenType.MP_SCOLON);
             formalParameterSection();
@@ -1031,9 +1122,11 @@ public class Parser {
         {
         case MP_IDENTIFIER: //23 ValueParameterSection -> IdentifierList mp_colon Type
             out.println("23");
-            identifierList();
+            //identifierList() match colon type()
+            List<String> ids = identifierList();
             match(TokenType.MP_COLON);
-            type();
+            Type t = type();
+            addSymbolsToTable(Classification.PARAMETER, ids, t);
             break;
         default:
             syntaxError("identifier");
@@ -1048,9 +1141,11 @@ public class Parser {
         case MP_VAR: //24 VariableParameterSection -> mp_var IdentifierList mp_colon Type
             out.println("24");
             match(TokenType.MP_VAR);
-            identifierList();
+            //identifierList() match colon type()
+            List<String> ids = identifierList();
             match(TokenType.MP_COLON);
-            type();
+            Type t = type();
+            addSymbolsToTable(Classification.VARIABLE, ids, t);
             break;
         default:
             syntaxError("var");
@@ -1334,13 +1429,13 @@ public class Parser {
             match(TokenType.MP_ASSIGN);
             expression();
         }
-            //        { //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression //TODO:Fix Ambiguity
-            //            out.println("50");
-            //            functionIdentifier();
-            //            match(TokenType.MP_ASSIGN);
-            //            expression();
-            //        }
-            break;
+        //        { //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression //TODO:Fix Ambiguity
+        //            out.println("50");
+        //            functionIdentifier();
+        //            match(TokenType.MP_ASSIGN);
+        //            expression();
+        //        }
+        break;
         default:
             syntaxError("identifier");
         }
@@ -1407,22 +1502,25 @@ public class Parser {
         }
     }
 
-    public void identifierList()
+    public List<String> identifierList()
     {
+        ArrayList<String> idList = new ArrayList<String>();
         debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //104 IdentifierList -> mp_identifier IdentifierTail
             out.println("104");
+            idList.add(lookAhead.getLexeme());
             match(TokenType.MP_IDENTIFIER);
-            identifierTail();
+            identifierTail(idList);
             break;
         default:
             syntaxError("identifier");
         }
+        return idList;
     }
 
-    public void identifierTail()
+    public void identifierTail(List<String> idList)
     {
         debug();
         switch (lookAhead.getType())
@@ -1430,8 +1528,9 @@ public class Parser {
         case MP_COMMA: //105 IdentifierTail -> mp_comma mp_identifier IdentifierTail
             out.println("105");
             match(TokenType.MP_COMMA);
+            idList.add(lookAhead.getLexeme());
             match(TokenType.MP_IDENTIFIER);
-            identifierTail();
+            identifierTail(idList);
             break;
         case MP_COLON: //106 IdentifierTail -> &epsilon
             out.println("106");

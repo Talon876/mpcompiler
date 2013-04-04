@@ -1,0 +1,5 @@
+program prog4; 
+var first: Integer;
+begin
+	first := 2 + (8 * 5) div 20;
+end.

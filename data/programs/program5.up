@@ -1,0 +1,7 @@
+program prog5; 
+var first, second, third: Integer;
+begin
+	first := 2 + (8 * 5) / 20;
+	second :=2;
+	third := first + second;
+end.
