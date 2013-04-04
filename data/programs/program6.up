@@ -2,11 +2,11 @@ program mainProgram6;
 var train, tree, speaker, couch, ba_con: Integer;
 	hello, goodbye: Boolean;
 	crazy: String;
-	omg: Float;
+	omg, nom: Float;
 
     procedure doMath(x1, y1, x2, y2 : Integer);
     begin
-        tree := x1 + y1 * x2 div y2
+        tree := x1 + x2 * y2 div y1;
     end;
 
     function alpha:float;
@@ -19,9 +19,10 @@ var train, tree, speaker, couch, ba_con: Integer;
         procedure things(z1, z2: boolean);
         begin
             arg1 := true;
+            omg := 5.5e1;
         end;
     begin
-        {things(true, false);}
+        things(true, false);
     end;
 
     function gamma(a1, a2: boolean):float;
@@ -35,5 +36,6 @@ begin
 	goodbye :=false;
 	crazy := 'crazy train';
 	omg := 2E10;
+    ba_con := beta(omg, nom);
 	WriteLN(crazy);
 end.

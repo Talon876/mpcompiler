@@ -22,7 +22,7 @@ import compiler.parser.symbol.Type;
 import compiler.parser.symbol.VariableRow;
 
 public class Parser {
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = !!false;
 
     Token lookAhead;
     Token lookAhead2;
@@ -35,6 +35,7 @@ public class Parser {
         this.scanner = scanner;
         symboltables = new Stack<SymbolTable>();
         lookAhead = scanner.getToken();
+        lookAhead2 = scanner.getToken();
         try {
             out = new PrintWriter(new FileWriter("parse-tree"));
         } catch (IOException e) {
@@ -47,13 +48,18 @@ public class Parser {
         System.out.println("The input program parses!");
     }
 
+    private void getToken() {
+        lookAhead = lookAhead2;
+        lookAhead2 = scanner.getToken();
+    }
+
     public void match(TokenType tokenInput) {
         if (lookAhead.getType() == tokenInput) {
             if (DEBUG) {
                 System.out.println("Matched token: " + lookAhead.getType() + " with " + tokenInput);
             }
             //get next lookahead
-            lookAhead = scanner.getToken();
+            getToken();
         } else {
             matchError(tokenInput.toString());
         }
@@ -66,6 +72,7 @@ public class Parser {
     }
 
     public void syntaxError(String expectedToken) {
+        Thread.dumpStack();
         System.out.println("Syntax error found on line " + lookAhead.getLineNumber() + ", column "
                 + lookAhead.getColumnNumber() + ": expected one of the following tokens {" + expectedToken
                 + "}, but found '" + lookAhead.getLexeme() + "'");
@@ -74,6 +81,11 @@ public class Parser {
         }
         out.flush();
         out.close();
+        System.exit(1);
+    }
+
+    public void semanticError(String errorMsg) {
+        System.out.println("Semantic Error: " + errorMsg);
         System.exit(1);
     }
 
@@ -151,6 +163,20 @@ public class Parser {
         }
     }
 
+    public Row findSymbol(String lexeme) {
+        for (int i = symboltables.size() - 1; i >= 0; i--) {
+            System.out.println(i);
+            SymbolTable st = symboltables.get(i);
+            Row s = st.findSymbol(lexeme);
+            System.out.println("Searching symboltable " + st.getScopeName() + " for " + lexeme);
+            if (s != null) {
+                System.out.println("Found " + s.getLexeme() + " in " + st.getScopeName());
+                return s;
+            }
+        }
+        return null;
+    }
+
     public void debug() {
         if (DEBUG) {
             System.out.println("\tExpanding nonterminal: " + Thread.currentThread().getStackTrace()[2].getMethodName()
@@ -191,7 +217,7 @@ public class Parser {
             match(TokenType.MP_SCOLON);
             block();
             match(TokenType.MP_PERIOD);
-            System.out.println("About to pop program symbol table:");
+
             printSymbolTables();
             removeSymbolTable(scopeName);
             break;
@@ -360,8 +386,6 @@ public class Parser {
             block();
             match(TokenType.MP_SCOLON);
 
-            System.out.println("About to pop procedure symbol table:");
-            printSymbolTables();
             removeSymbolTable();
             break;
         default:
@@ -380,8 +404,6 @@ public class Parser {
             block();
             match(TokenType.MP_SCOLON);
 
-            System.out.println("About to pop function symbol table:");
-            printSymbolTables();
             removeSymbolTable();
             break;
         default:
@@ -994,13 +1016,24 @@ public class Parser {
     public void factor() {
         debug();
         switch (lookAhead.getType()) {
-        case MP_IDENTIFIER: //94 Factor -> VariableIdentifier
-            out.println("94");
-            variableIdentifier();
-            //TODO make this not ambiguous
-            //functionIdentifier(); //97 Factor -> FunctionIdentifier OptionalActualParameterList
-            //out.println("97");
-            // optionalActualParameterList();
+        case MP_IDENTIFIER:
+            Row factorVar = findSymbol(lookAhead.getLexeme());
+            if (factorVar != null) {
+                if (factorVar instanceof VariableRow || factorVar instanceof ParameterRow) {
+                    out.println("94"); //94 Factor -> VariableIdentifier
+                    variableIdentifier();
+                } else if (factorVar instanceof FunctionRow) {
+                    out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
+                    functionIdentifier();
+                    optionalActualParameterList();
+                } else {
+                    semanticError("Cannot use Procedure identifier '" + lookAhead.getLexeme() + "' as factor.");
+                }
+            } else {
+                semanticError("Undeclared identifier: '" + lookAhead.getLexeme() + "'");
+            }
+
+            //variableIdentifier();
             break;
         case MP_LPAREN: //96 Factor -> mp_lparen Expression mp_rparen
             out.println("96");
@@ -1255,10 +1288,13 @@ public class Parser {
             writeStatement();
             break;
         case MP_IDENTIFIER:
-            out.println("34");
-            assignmentStatement(); //TODO: Fix Ambiguity //34 Statement  -> AssigmentStatement
-            //procedureStatement(); //TODO: Fix Ambiguity //39 Statement  -> ProcedureStatement
-            //out.println("39");
+            if (lookAhead2.getType() == TokenType.MP_ASSIGN) {
+                out.println("34");
+                assignmentStatement(); //34 Statement  -> AssigmentStatement
+            } else {
+                out.println("39");
+                procedureStatement();//39 Statement  -> ProcedureStatement
+            }
             break;
         case MP_IF:
             ifStatement(); //35 Statement  -> IfStatement
@@ -1423,18 +1459,29 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IDENTIFIER: { //49 AssignmentStatement -> VariableIdentifier mp_assign Expression //TODO:Fix Ambiguity
-            out.println("49");
-            variableIdentifier();
-            match(TokenType.MP_ASSIGN);
-            expression();
+        case MP_IDENTIFIER: {
+            Row assign = findSymbol(lookAhead.getLexeme());
+            if (assign == null) {
+                semanticError("Undeclared identifier " + lookAhead.getLexeme() + " found.");
+            } else {
+                if (assign instanceof VariableRow) {
+                    //49 AssignmentStatement -> VariableIdentifier mp_assign Expression
+                    out.println("49");
+                    variableIdentifier();
+                    match(TokenType.MP_ASSIGN);
+                    expression();
+                } else if (assign instanceof FunctionRow) {
+                    //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression
+                    out.println("50");
+                    functionIdentifier();
+                    match(TokenType.MP_ASSIGN);
+                    expression();
+                } else {
+                    semanticError("Cannot assign value to Parameter or Procedure");
+                }
+            }
         }
-        //        { //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression //TODO:Fix Ambiguity
-        //            out.println("50");
-        //            functionIdentifier();
-        //            match(TokenType.MP_ASSIGN);
-        //            expression();
-        //        }
+
         break;
         default:
             syntaxError("identifier");
