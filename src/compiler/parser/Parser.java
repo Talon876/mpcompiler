@@ -165,12 +165,9 @@ public class Parser {
 
     public Row findSymbol(String lexeme) {
         for (int i = symboltables.size() - 1; i >= 0; i--) {
-            System.out.println(i);
             SymbolTable st = symboltables.get(i);
             Row s = st.findSymbol(lexeme);
-            System.out.println("Searching symboltable " + st.getScopeName() + " for " + lexeme);
             if (s != null) {
-                System.out.println("Found " + s.getLexeme() + " in " + st.getScopeName());
                 return s;
             }
         }
@@ -386,6 +383,8 @@ public class Parser {
             block();
             match(TokenType.MP_SCOLON);
 
+            System.out.println("About to pop procedure table");
+            printSymbolTables();
             removeSymbolTable();
             break;
         default:
@@ -404,6 +403,8 @@ public class Parser {
             block();
             match(TokenType.MP_SCOLON);
 
+            System.out.println("About to pop function table");
+            printSymbolTables();
             removeSymbolTable();
             break;
         default:
@@ -1357,7 +1358,7 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_READ: //42 ReadParameterTail -> mp_comma ReadParameter ReadParameterTail
+        case MP_COMMA: //42 ReadParameterTail -> mp_comma ReadParameter ReadParameterTail
             out.println("42");
             match(TokenType.MP_COMMA);
             readParameter();
@@ -1417,10 +1418,11 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_COMMA: //46 WriteParameterTail -> mp_comma WriteParameter
+        case MP_COMMA: //46 WriteParameterTail -> mp_comma WriteParameter WriteParameterTail
             out.println("46");
             match(TokenType.MP_COMMA);
             writeParameter();
+            writeParameterTail();
             break;
         case MP_RPAREN: //47 WriteParameterTail -> &epsilon
             out.println("47");

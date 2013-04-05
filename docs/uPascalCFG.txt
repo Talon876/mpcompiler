@@ -43,7 +43,7 @@ ReadParameterTail -> mp_comma ReadParameter ReadParameterTail
 | .
 ReadParameter -> VariableIdentifier.
 WriteStatement -> mp_write mp_lparen WriteParameter WriteParameterTail mp_rparen.
-WriteParameterTail -> mp_comma WriteParameter
+WriteParameterTail -> mp_comma WriteParameter WriteParameterTail
 | .
 WriteParameter -> OrdinalExpression.
 AssignmentStatement -> VariableIdentifier mp_assign Expression
