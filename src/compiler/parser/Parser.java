@@ -14,12 +14,10 @@ import compiler.parser.symbol.Attribute;
 import compiler.parser.symbol.Classification;
 import compiler.parser.symbol.FunctionRow;
 import compiler.parser.symbol.Mode;
-import compiler.parser.symbol.ParameterRow;
 import compiler.parser.symbol.ProcedureRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
-import compiler.parser.symbol.VariableRow;
 
 public class Parser {
     private static final boolean DEBUG = !!false;
@@ -29,7 +27,6 @@ public class Parser {
     Scanner scanner;
     PrintWriter out;
     Stack<SymbolTable> symboltables;
-    Row mostRecentFunctionProcedure = null;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
@@ -84,7 +81,7 @@ public class Parser {
         System.exit(1);
     }
 
-    public void semanticError(String errorMsg) {
+    public static void semanticError(String errorMsg) {
         System.out.println("Semantic Error: " + errorMsg);
         System.exit(1);
     }
@@ -111,49 +108,14 @@ public class Parser {
     private void removeSymbolTable(String scopeName)
     {
         symboltables.pop();
+        SymbolTable.decrementNestingLevel();
     }
 
     private void removeSymbolTable() {
         symboltables.pop();
+        SymbolTable.decrementNestingLevel();
     }
 
-    private void addSymbolsToTable(Classification c, List<String> ids, Type t) {
-        for (String lex : ids) {
-            switch (c) {
-            case VARIABLE:
-                VariableRow v = new VariableRow(lex, c, t);
-                symboltables.peek().insertRow(v);
-                break;
-            case PARAMETER:
-                ParameterRow p = new ParameterRow(lex, c, t);
-                symboltables.peek().insertRow(p);
-                if (mostRecentFunctionProcedure != null) { //shouldn't have parameters without first hitting a function/procedure anyway
-                    if (mostRecentFunctionProcedure instanceof FunctionRow) {
-                        ((FunctionRow) mostRecentFunctionProcedure).addAttribute(new Attribute(t, Mode.PARAMETER));
-                    } else if (mostRecentFunctionProcedure instanceof ProcedureRow) {
-                        ((ProcedureRow) mostRecentFunctionProcedure).addAttribute(new Attribute(t, Mode.PARAMETER));
-                    }
-                }
-                break;
-            case FUNCTION:
-                FunctionRow f = new FunctionRow(lex, c, t);
-                symboltables.peek().insertRow(f);
-                mostRecentFunctionProcedure = f;
-                break;
-            case PROCEDURE:
-                ProcedureRow proc = new ProcedureRow(lex, c);
-                symboltables.peek().insertRow(proc);
-                mostRecentFunctionProcedure = proc;
-                break;
-            }
-        }
-    }
-
-    private void addSymbolsToTable(Classification c, String lexeme, Type t) {
-        List<String> ids = new ArrayList<String>();
-        ids.add(lexeme);
-        addSymbolsToTable(c, ids, t);
-    }
 
     public void printSymbolTables()
     {
@@ -310,7 +272,7 @@ public class Parser {
             List<String> ids = identifierList();
             match(TokenType.MP_COLON);
             Type t = type();
-            addSymbolsToTable(Classification.VARIABLE, ids, t);
+            symboltables.peek().addSymbolsToTable(Classification.VARIABLE, ids, t);
             break;
         default:
             syntaxError("identifier");
@@ -414,6 +376,7 @@ public class Parser {
 
     public void procedureHeading()
     {
+        
         debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //15 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
@@ -421,7 +384,7 @@ public class Parser {
             match(TokenType.MP_PROCEDURE);
 
             String procId = lookAhead.getLexeme();
-            addSymbolsToTable(Classification.PROCEDURE, procId, null);
+            symboltables.peek().addSymbolsToTable(Classification.PROCEDURE, procId, null);
             addSymbolTable(procId);
 
             procedureIdentifier();
@@ -441,14 +404,14 @@ public class Parser {
             match(TokenType.MP_FUNCTION);
 
             String funcId = lookAhead.getLexeme();
-            addSymbolsToTable(Classification.FUNCTION, funcId, null);
+            symboltables.peek().addSymbolsToTable(Classification.FUNCTION, funcId, null);
             addSymbolTable(funcId);
 
             functionIdentifier();
             optionalFormalParameterList();
             match(TokenType.MP_COLON);
             Type t = type();
-            ((FunctionRow) mostRecentFunctionProcedure).setReturnType(t); //since we just added a FunctionRow, mostRecent will always be a FunctionRow
+          //  ((FunctionRow) symboltables.peek().mostRecentFunctionProcedure).setReturnType(t); //since we just added a FunctionRow, mostRecent will always be a FunctionRow
             break;
         default:
             syntaxError("function");
@@ -1020,10 +983,10 @@ public class Parser {
         case MP_IDENTIFIER:
             Row factorVar = findSymbol(lookAhead.getLexeme());
             if (factorVar != null) {
-                if (factorVar instanceof VariableRow || factorVar instanceof ParameterRow) {
+                if (factorVar.getClassification() == Classification.VARIABLE || factorVar.getClassification() == Classification.PARAMETER) {
                     out.println("94"); //94 Factor -> VariableIdentifier
                     variableIdentifier();
-                } else if (factorVar instanceof FunctionRow) {
+                } else if (factorVar.getClassification() == Classification.FUNCTION) {
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
                     functionIdentifier();
                     optionalActualParameterList();
@@ -1160,7 +1123,7 @@ public class Parser {
             List<String> ids = identifierList();
             match(TokenType.MP_COLON);
             Type t = type();
-            addSymbolsToTable(Classification.PARAMETER, ids, t);
+            symboltables.peek().addSymbolsToTable(Classification.PARAMETER, ids, t);
             break;
         default:
             syntaxError("identifier");
@@ -1179,7 +1142,7 @@ public class Parser {
             List<String> ids = identifierList();
             match(TokenType.MP_COLON);
             Type t = type();
-            addSymbolsToTable(Classification.VARIABLE, ids, t);
+            symboltables.peek().addSymbolsToTable(Classification.VARIABLE, ids, t);
             break;
         default:
             syntaxError("var");
@@ -1466,13 +1429,13 @@ public class Parser {
             if (assign == null) {
                 semanticError("Undeclared identifier " + lookAhead.getLexeme() + " found.");
             } else {
-                if (assign instanceof VariableRow) {
+                if (assign.getClassification() == Classification.VARIABLE) {
                     //49 AssignmentStatement -> VariableIdentifier mp_assign Expression
                     out.println("49");
                     variableIdentifier();
                     match(TokenType.MP_ASSIGN);
                     expression();
-                } else if (assign instanceof FunctionRow) {
+                } else if (assign.getClassification() == Classification.FUNCTION) {
                     //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression
                     out.println("50");
                     functionIdentifier();

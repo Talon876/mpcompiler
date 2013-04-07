@@ -3,7 +3,7 @@ package compiler.parser.symbol;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionRow extends Row {
+public class FunctionRow extends Row implements ModuleRow{
 
     private Type returnType;
 

@@ -11,6 +11,10 @@ var train, tree, speaker, couch, ba_con: Integer;
 
     function alpha:float;
     var first: integer; second: float;
+	    function alphaprime:integer;
+	    var alphafirst: integer;
+	    	begin
+	    	end;
     begin
         speaker := first - second;
     end;

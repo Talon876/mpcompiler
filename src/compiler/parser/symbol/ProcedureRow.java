@@ -3,7 +3,7 @@ package compiler.parser.symbol;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProcedureRow extends Row {
+public class ProcedureRow extends Row implements ModuleRow {
 
     private List<Attribute> attributes;
 
