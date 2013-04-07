@@ -25,5 +25,9 @@ public enum RecordType {
     /**
      * Data is (MP_AND, MP_MOD, MP_DIV, MP_TIMES)
      */
-    MUL_OP
+    MUL_OP,
+    /**
+     * Data is Current Symbol Table Name, Current Symbol Table Level, Current Table Size
+     */
+    SYM_TBL
 }

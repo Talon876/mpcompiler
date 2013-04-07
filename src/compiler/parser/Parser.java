@@ -166,11 +166,18 @@ public class Parser {
             String scopeName = programHeading();
             addSymbolTable(scopeName);
             match(TokenType.MP_SCOLON);
-            block();
+            block(scopeName);
+
             match(TokenType.MP_PERIOD);
 
+            SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
+                    + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
+            //#gen_deactivation_rec(name_rec)
+            analyzer.gen_deactivation_rec(name_rec);
             printSymbolTables();
             removeSymbolTable(scopeName);
+            //#gen_halt()
+            analyzer.gen_halt();
             break;
         default:
             syntaxError("program");
@@ -193,7 +200,7 @@ public class Parser {
         return name;
     }
 
-    public void block()
+    public void block(String scopeName)
     {
         debug();
         switch (lookAhead.getType()) {
@@ -203,6 +210,12 @@ public class Parser {
         case MP_VAR: //4 Block -> VariableDeclarationPart ProcedureAndFunctionDeclarationPart StatementPart
             out.println("4");
             variableDeclarationPart();
+
+            SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, scopeName, ""
+                    + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
+            //#gen_activation_rec(name_rec)
+            analyzer.gen_activation_rec(name_rec);
+
             procedureAndFunctionDeclarationPart();
             statementPart();
             break;
@@ -332,11 +345,15 @@ public class Parser {
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //13 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
             out.println("13");
-            procedureHeading();
+            String procId = procedureHeading();
             match(TokenType.MP_SCOLON);
-            block();
+            block(procId);
             match(TokenType.MP_SCOLON);
 
+            SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
+                    + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
+            //#gen_deactivation_rec(name_rec)
+            analyzer.gen_deactivation_rec(name_rec);
             System.out.println("About to pop procedure table");
             printSymbolTables();
             removeSymbolTable();
@@ -352,11 +369,15 @@ public class Parser {
         switch (lookAhead.getType()) {
         case MP_FUNCTION: //14 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
             out.println("14");
-            functionHeading();
+            String funcId = functionHeading();
             match(TokenType.MP_SCOLON);
-            block();
+            block(funcId);
             match(TokenType.MP_SCOLON);
 
+            SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
+                    + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
+            //#gen_deactivation_rec(name_rec)
+            analyzer.gen_deactivation_rec(name_rec);
             System.out.println("About to pop function table");
             printSymbolTables();
             removeSymbolTable();
@@ -366,16 +387,16 @@ public class Parser {
         }
     }
 
-    public void procedureHeading()
+    public String procedureHeading()
     {
-
+        String procId = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //15 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
             out.println("15");
             match(TokenType.MP_PROCEDURE);
 
-            String procId = lookAhead.getLexeme();
+            procId = lookAhead.getLexeme();
             symboltables.peek().addSymbolsToTable(Classification.PROCEDURE, procId, null);
             addSymbolTable(procId);
 
@@ -385,17 +406,19 @@ public class Parser {
         default:
             syntaxError("procedure");
         }
+        return procId;
     }
 
-    public void functionHeading()
+    public String functionHeading()
     {
+        String funcId = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_FUNCTION: //16 FunctionHeading -> mp_function FunctionIdentifier OptionalFormalParameterList mp_colon Type
             out.println("16");
             match(TokenType.MP_FUNCTION);
 
-            String funcId = lookAhead.getLexeme();
+            funcId = lookAhead.getLexeme();
             symboltables.peek().addSymbolsToTable(Classification.FUNCTION, funcId, null);
             addSymbolTable(funcId);
 
@@ -408,6 +431,7 @@ public class Parser {
         default:
             syntaxError("function");
         }
+        return funcId;
     }
 
     public void optionalFormalParameterList()
