@@ -82,7 +82,7 @@ public class Analyzer {
     {
         out.println("push " + memLoc);
     }
-    
+
     /**
      * Pops the value from the stack into the memory location
      * 
@@ -125,6 +125,66 @@ public class Analyzer {
         out.println("sub " + src1 + " " + src2 + " " + dst);
     }
 
+    private void notEqualI()
+    {
+        out.println("cmpnes");
+    }
+
+    private void greaterEqualI()
+    {
+        out.println("cmpges");
+    }
+
+    private void lessEqualI()
+    {
+        out.println("cmples");
+    }
+
+    private void greaterThanI()
+    {
+        out.println("cmpgts");
+    }
+
+    private void lessThanI()
+    {
+        out.println("cmplts");
+    }
+
+    private void equalI()
+    {
+        out.println("cmpeqs");
+    }
+
+    private void notEqualF()
+    {
+        out.println("cmpnesf");
+    }
+
+    private void greaterEqualF()
+    {
+        out.println("cmpgesf");
+    }
+
+    private void lessEqualF()
+    {
+        out.println("cmplesf");
+    }
+
+    private void greaterThanF()
+    {
+        out.println("cmpgtsf");
+    }
+
+    private void lessThanF()
+    {
+        out.println("cmpltsf");
+    }
+
+    private void equalF()
+    {
+        out.println("cmpeqsf");
+    }
+
     /**
      * Halts program execution
      */
@@ -132,7 +192,7 @@ public class Analyzer {
     {
         out.println("hlt");
     }
-    
+
     /**
      * Prints a comment to the VM code (for human readability)
      * 
@@ -168,7 +228,7 @@ public class Analyzer {
      */
     public void gen_deactivation_rec(SemanticRec name_rec)
     {
-        
+
         String dataSize = name_rec.getDatum(2);
         sub("SP", "#" + dataSize, "SP");
         String register = getRegisterFromNL(name_rec.getDatum(1));
@@ -183,12 +243,12 @@ public class Analyzer {
     {
         halt();
     }
-    
+
     /**
      * 
      */
     public void gen_assign() {
-        
+
     }
 
     /**
@@ -209,33 +269,60 @@ public class Analyzer {
 
         Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
         String relOp = op.getDatum(0); //MP_NEQUAL, MP_GEQUAL, MP_LEQUAL, MP_GTHAN, MP_LTHAN, MP_EQUAL
-        switch (relOp)
+        switch (resultType)
         {
-        case "MP_NEQUAL":
-            out.print("CMPNES");
+        case INTEGER:
+            switch (relOp)
+            {
+            case "MP_NEQUAL":
+                notEqualI();
+                break;
+            case "MP_GEQUAL":
+                greaterEqualI();
+                break;
+            case "MP_LEQUAL":
+                lessEqualI();
+                break;
+            case "MP_GTHAN":
+                greaterThanI();
+                break;
+            case "MP_LTHAN":
+                lessThanI();
+                break;
+            case "MP_EQUAL":
+                equalI();
+                break;
+            default:
+                Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
+            }
             break;
-        case "MP_GEQUAL":
-            out.print("CMPGES");
-            break;
-        case "MP_LEQUAL":
-            out.print("CMPLES");
-            break;
-        case "MP_GTHAN":
-            out.print("CMPGTS");
-            break;
-        case "MP_LTHAN":
-            out.print("CMPLTS");
-            break;
-        case "MP_EQUAL":
-            out.print("CMPEQS");
-            break;
+        case FLOAT:
+            switch (relOp)
+            {
+            case "MP_NEQUAL":
+                notEqualF();
+                break;
+            case "MP_GEQUAL":
+                greaterEqualF();
+                break;
+            case "MP_LEQUAL":
+                lessEqualF();
+                break;
+            case "MP_GTHAN":
+                greaterThanF();
+                break;
+            case "MP_LTHAN":
+                lessThanF();
+                break;
+            case "MP_EQUAL":
+                equalF();
+                break;
+            default:
+                Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
+            }
+        default:
+            Parser.semanticError(resultType + " does not have relational operators");
         }
-        if (resultType == Type.FLOAT)
-        {
-            out.print("F"); //Add F to the line for Float/Fixed operation
-        }
-        out.println();
-
     }
 
     /**
