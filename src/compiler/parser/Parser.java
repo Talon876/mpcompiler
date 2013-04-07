@@ -797,7 +797,7 @@ public class Parser {
             op = relationalOperator();
             right = simpleExpression();
             //#gen_opt_rel_part(left, op, right) //leaves boolean on stack
-            analyzer.gen_opt_rel_part(left, op, right);
+            //analyzer.gen_opt_rel_part(left, op, right); //TODO:push values on the stack first before uncommenting, currently the code will return null
             opt = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString());
             break;
         default:
