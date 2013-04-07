@@ -10,6 +10,7 @@ public class ProcedureRow extends Row implements ModuleRow {
     public ProcedureRow(String lexeme, Classification classification, Attribute[] attributes) {
         super(lexeme, classification);
         this.attributes = new ArrayList<Attribute>();
+        setType(null);
         for (Attribute a : attributes) {
             this.attributes.add(a);
         }
@@ -17,6 +18,7 @@ public class ProcedureRow extends Row implements ModuleRow {
 
     public ProcedureRow(String lexeme, Classification classification) {
         super(lexeme, classification);
+        setType(null);
         attributes = new ArrayList<Attribute>();
     }
 
@@ -27,6 +29,16 @@ public class ProcedureRow extends Row implements ModuleRow {
     public List<Attribute> getAttributes()
     {
         return attributes;
+    }
+
+    public Type getType()
+    {
+        return null;
+    }
+
+    public void setType(Type t)
+    {
+        super.setType(null);
     }
 
     @Override

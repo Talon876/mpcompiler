@@ -14,7 +14,7 @@ public class SymbolTable implements Printable {
     private int nestingLevel;
     private AtomicInteger memSize;
     public ModuleRow mostRecentFunctionProcedure = null;
-    
+
     public SymbolTable(String scopeName) {
         this.scopeName = scopeName;
         rows = new ArrayList<Row>();
@@ -26,28 +26,33 @@ public class SymbolTable implements Printable {
     {
         return NEXT_NESTING_LEVEL.getAndIncrement();
     }
-    
+
     public static int decrementNestingLevel()
     {
         return NEXT_NESTING_LEVEL.decrementAndGet();
     }
-    
+
     public int getTableSize()
     {
         return memSize.get();
     }
-    
+
     private int getAndIncrementTableSize()
     {
         return memSize.getAndIncrement();
     }
-    
+
     public String getScopeName() {
         return scopeName;
     }
 
     public void setScopeName(String scopeName) {
         this.scopeName = scopeName;
+    }
+
+    public int getNestingLevel()
+    {
+        return nestingLevel;
     }
 
     public void insertRow(Row row) {
@@ -69,10 +74,20 @@ public class SymbolTable implements Printable {
         return null;
     }
 
+    public Row findSymbol(String lexeme, Classification c) {
+        for (Row r : rows) {
+            if (r.getLexeme().equalsIgnoreCase(lexeme) && r.getClassification() == c) {
+                return r;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void print()
     {
-        System.out.println("SymbolTable Name: " + scopeName + "\t Nesting Level: " + nestingLevel + "\t Size: " + getTableSize());
+        System.out.println("SymbolTable Name: " + scopeName + "\t Nesting Level: " + nestingLevel + "\t Size: "
+                + getTableSize());
         for (Row r : rows)
         {
             System.out.print("\tRow ");
@@ -86,7 +101,7 @@ public class SymbolTable implements Printable {
             case VARIABLE:
                 DataRow v = new DataRow(lex, c, t, getAndIncrementTableSize());
                 insertRow(v);
-                
+
                 break;
             case PARAMETER:
                 DataRow p = new DataRow(lex, c, t, getAndIncrementTableSize());
@@ -118,7 +133,7 @@ public class SymbolTable implements Printable {
         ids.add(lexeme);
         addSymbolsToTable(c, ids, t);
     }
-    
+
     public static void main(String[] args)
     {
         SymbolTable table = new SymbolTable("Maintest");
@@ -131,4 +146,5 @@ public class SymbolTable implements Printable {
 
         table.print();
     }
+
 }

@@ -7,6 +7,7 @@ var train, tree, speaker, couch, ba_con: Integer;
     procedure doMath(x1, y1, x2, y2 : Integer);
     begin
         tree := x1 + x2 * y2 div y1;
+        hello := x1 < tree;
     end;
 
     function alpha:float;

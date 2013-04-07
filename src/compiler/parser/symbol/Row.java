@@ -1,8 +1,9 @@
 package compiler.parser.symbol;
 
-public abstract class Row implements Printable{
+public abstract class Row implements Printable {
     private Classification classification;
     private String lexeme;
+    private Type type;
 
     public Row(String lexeme, Classification classification) {
         this.lexeme = lexeme;
@@ -25,4 +26,11 @@ public abstract class Row implements Printable{
         this.lexeme = lexeme;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
 }

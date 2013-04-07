@@ -1,5 +1,6 @@
 package compiler.parser;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -10,11 +11,8 @@ import java.util.Stack;
 import compiler.Scanner;
 import compiler.Token;
 import compiler.TokenType;
-import compiler.parser.symbol.Attribute;
+import compiler.analyzer.Analyzer;
 import compiler.parser.symbol.Classification;
-import compiler.parser.symbol.FunctionRow;
-import compiler.parser.symbol.Mode;
-import compiler.parser.symbol.ProcedureRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
@@ -27,8 +25,9 @@ public class Parser {
     Scanner scanner;
     PrintWriter out;
     Stack<SymbolTable> symboltables;
+    Analyzer analyzer;
 
-    public Parser(Scanner scanner) {
+    public Parser(Scanner scanner, String outputFile) throws IOException {
         this.scanner = scanner;
         symboltables = new Stack<SymbolTable>();
         lookAhead = scanner.getToken();
@@ -38,6 +37,7 @@ public class Parser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        analyzer = new Analyzer(symboltables, new File(outputFile));
 
         systemGoal();
         out.flush();
@@ -102,6 +102,10 @@ public class Parser {
             symboltables.push(new SymbolTable(scopeName));
             return true;
         }
+        else
+        {
+            semanticError("Symbol table with name " + scopeName + " already exists");
+        }
         return false;
     }
 
@@ -116,24 +120,12 @@ public class Parser {
         SymbolTable.decrementNestingLevel();
     }
 
-
     public void printSymbolTables()
     {
         for (SymbolTable st : symboltables)
         {
             st.print();
         }
-    }
-
-    public Row findSymbol(String lexeme) {
-        for (int i = symboltables.size() - 1; i >= 0; i--) {
-            SymbolTable st = symboltables.get(i);
-            Row s = st.findSymbol(lexeme);
-            if (s != null) {
-                return s;
-            }
-        }
-        return null;
     }
 
     public void debug() {
@@ -169,7 +161,7 @@ public class Parser {
     {
         debug();
         switch (lookAhead.getType()) {
-        case MP_PROGRAM: //2 Program -> Programheading mp_scolon Block mp_period
+        case MP_PROGRAM: //2 Program -> Programheading #create_symbol_table(program_identifier_rec) mp_scolon Block mp_period
             out.println("2");
             String scopeName = programHeading();
             addSymbolTable(scopeName);
@@ -376,7 +368,7 @@ public class Parser {
 
     public void procedureHeading()
     {
-        
+
         debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //15 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
@@ -411,7 +403,7 @@ public class Parser {
             optionalFormalParameterList();
             match(TokenType.MP_COLON);
             Type t = type();
-          //  ((FunctionRow) symboltables.peek().mostRecentFunctionProcedure).setReturnType(t); //since we just added a FunctionRow, mostRecent will always be a FunctionRow
+            //  ((FunctionRow) symboltables.peek().mostRecentFunctionProcedure).setReturnType(t); //since we just added a FunctionRow, mostRecent will always be a FunctionRow
             break;
         default:
             syntaxError("function");
@@ -467,7 +459,7 @@ public class Parser {
             out.println("52");
             match(TokenType.MP_ELSE);
             statement();
-            match(TokenType.MP_END); //TODO fix this so that the epsilon isn't ambiguous
+            // match(TokenType.MP_END); //TODO fix this so that the epsilon isn't ambiguous
             break;
         case MP_UNTIL:
         case MP_SCOLON:
@@ -704,7 +696,16 @@ public class Parser {
         }
     }
 
-    public void expression() {
+    /**
+     * 
+     * @return SemanticRec either RecordType.IDENTIFIER or RecordType.LITERAL
+     */
+    public SemanticRec expression() {
+        SemanticRec simpEx;
+        SemanticRec opt;
+
+        SemanticRec expr = null;
+
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
@@ -718,15 +719,35 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //68 Expression -> SimpleExpression OptionalRelationalPart
             out.println("68");
-            simpleExpression();
-            optionalRelationalPart();
+            simpEx = simpleExpression();
+            opt = optionalRelationalPart(simpEx);
+            if (opt != null)
+            {
+                expr = opt;
+            }
+            else
+            {
+                expr = simpEx;
+            }
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
+        return expr;
     }
 
-    public void optionalRelationalPart() {
+    /**
+     * 
+     * @param left
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#simpleExpression()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     * @return {@link SemanticRec} either null or {@link RecordType#LITERAL}
+     */
+    public SemanticRec optionalRelationalPart(SemanticRec left) {
+        SemanticRec op;
+        SemanticRec right;
+
+        SemanticRec opt = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
@@ -749,47 +770,73 @@ public class Parser {
         case MP_LTHAN:
         case MP_EQUAL: //69 OptionalRelationalPart -> RelationalOperator SimpleExpression
             out.println("69");
-            relationalOperator();
-            simpleExpression();
+            op = relationalOperator();
+            right = simpleExpression();
+            //#gen_opt_rel_part(left, op, right) //leaves boolean on stack
+            analyzer.gen_opt_rel_part(left, op, right);
+            opt = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString());
             break;
         default:
             syntaxError("',', ), downto, to, do, until, else, then, ;, end, <>, >=, <=, >, <, =");
         }
+        return opt;
     }
 
-    public void relationalOperator() {
+    /**
+     * 
+     * @return SemanticRec RecordType.REL_OP
+     */
+    public SemanticRec relationalOperator() {
+        SemanticRec relOp = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_NEQUAL: //76 RelationalOperator -> mp_nequal
             out.println("76");
             match(TokenType.MP_NEQUAL);
+            relOp = new SemanticRec(RecordType.REL_OP, TokenType.MP_NEQUAL.toString());
             break;
         case MP_GEQUAL: //75 RelationalOperator -> mp_gequal
             out.println("75");
             match(TokenType.MP_GEQUAL);
+            relOp = new SemanticRec(RecordType.REL_OP, TokenType.MP_GEQUAL.toString());
             break;
         case MP_LEQUAL: //74 RelationalOperator -> mp_lequal
             out.println("74");
             match(TokenType.MP_LEQUAL);
+            relOp = new SemanticRec(RecordType.REL_OP, TokenType.MP_LEQUAL.toString());
             break;
         case MP_GTHAN: //73 RelationalOperator -> mp_gthan
             out.println("73");
             match(TokenType.MP_GTHAN);
+            relOp = new SemanticRec(RecordType.REL_OP, TokenType.MP_GTHAN.toString());
             break;
         case MP_LTHAN: //72 RelationalOperator -> mp_lthan
             out.println("72");
             match(TokenType.MP_LTHAN);
+            relOp = new SemanticRec(RecordType.REL_OP, TokenType.MP_LTHAN.toString());
             break;
         case MP_EQUAL: //71 RelationalOperator -> mp_equal
             out.println("71");
             match(TokenType.MP_EQUAL);
+            relOp = new SemanticRec(RecordType.REL_OP, TokenType.MP_EQUAL.toString());
             break;
         default:
             syntaxError("<>, >=, <= , >, <, =");
         }
+        return relOp;
     }
 
-    public void simpleExpression() {
+    /**
+     * 
+     * @return SemanticRec RecordType.LITERAL or RecordType.IDENTIFIER
+     */
+    public SemanticRec simpleExpression() {
+        SemanticRec optSign;
+        SemanticRec term;
+        SemanticRec tt;
+
+        SemanticRec simpEx = null;
+
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
@@ -803,16 +850,32 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //77 SimpleExpression -> OptionalSign Term TermTail
             out.println("77");
-            optionalSign();
-            term();
-            termTail();
+            optSign = optionalSign();
+            term = term();
+            //TODO:#gen_sim_negate(optSign, term) value on stack
+            tt = termTail(term);
+            if (tt == null)
+            {
+                tt = term; //if there isn't a termTail use the type from term else use the result of termTail
+            }
+            simpEx = tt; //return the type from term
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
+        return simpEx;
     }
 
-    public void termTail() {
+    /**
+     * 
+     * @param left
+     * @return SemanticRec RecordType.LITERAL or RecordType.IDENTIFIER
+     */
+    public SemanticRec termTail(SemanticRec left) {
+        SemanticRec addOp;
+        SemanticRec term;
+
+        SemanticRec tt = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
@@ -838,16 +901,27 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //78 TermTail -> AddingOperator Term TermTail
             out.println("78");
-            addingOperator();
-            term();
-            termTail();
+            addOp = addingOperator();
+            term = term();
+            //TODO:#gen_addOp(left, addOp, term)
+            tt = termTail(term);
+            if (tt == null)
+            {
+                tt = term; //if there isn't a termTail use the type from term else use the result of termTail
+            }
             break;
         default:
             syntaxError("',', ), <>, >=, <=, >, <, =, downto, to, do, until, else, then, ;, end, or, -, +");
         }
+        return tt;
     }
 
-    public void optionalSign() {
+    /**
+     * 
+     * @return SemanticRec RecordType.OPT_SIGN
+     */
+    public SemanticRec optionalSign() {
+        SemanticRec optSign = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
@@ -864,37 +938,53 @@ public class Parser {
         case MP_MINUS: //81 OptionalSign -> mp_minus
             out.println("81");
             match(TokenType.MP_MINUS);
+            optSign = new SemanticRec(RecordType.OPT_SIGN, TokenType.MP_MINUS.toString());
             break;
         case MP_PLUS: //80 OptionalSign -> mp_plus
             out.println("80");
             match(TokenType.MP_PLUS);
+            optSign = new SemanticRec(RecordType.OPT_SIGN, TokenType.MP_PLUS.toString());
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
+        return optSign;
     }
 
-    public void addingOperator() {
+    public SemanticRec addingOperator() {
+        SemanticRec addOp = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_OR: //85 AddingOperator -> mp_or
             out.println("85");
             match(TokenType.MP_OR);
+            addOp = new SemanticRec(RecordType.ADD_OP, TokenType.MP_OR.toString());
             break;
         case MP_MINUS: //84 AddingOperator -> mp_minus
             out.println("84");
             match(TokenType.MP_MINUS);
+            addOp = new SemanticRec(RecordType.ADD_OP, TokenType.MP_MINUS.toString());
             break;
         case MP_PLUS: //83 AddingOperator -> mp_plus
             out.println("83");
             match(TokenType.MP_PLUS);
+            addOp = new SemanticRec(RecordType.ADD_OP, TokenType.MP_PLUS.toString());
             break;
         default:
             syntaxError("or, -, +");
         }
+        return addOp;
     }
 
-    public void term() {
+    /**
+     * 
+     * @return SemanticRec RecordType.LITERAL or RecordType.IDENTIFIER
+     */
+    public SemanticRec term() {
+        SemanticRec factor;
+        SemanticRec ft;
+        SemanticRec term = null;
+
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
@@ -906,15 +996,30 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT: //86 Term -> Factor FactorTail
             out.println("86");
-            factor();
-            factorTail();
+            factor = factor();
+            ft = factorTail(factor);
+            if (ft == null)
+            {
+                ft = factor;
+            }
+            term = ft; //return factor type
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer");
         }
+        return term;
     }
 
-    public void factorTail() {
+    /**
+     * 
+     * @param left
+     * @return SemanticRec RecordType.LITERAL or RecordType.IDENTIFIER
+     */
+    public SemanticRec factorTail(SemanticRec left) {
+        SemanticRec mulOp;
+        SemanticRec factor;
+
+        SemanticRec ft = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
@@ -944,52 +1049,80 @@ public class Parser {
         case MP_DIV:
         case MP_TIMES: //87 FactorTail -> MultiplyingOperator Factor FactorTail
             out.println("87");
-            multiplyingOperator();
-            factor();
-            factorTail();
+            mulOp = multiplyingOperator();
+            factor = factor();
+            //TODO:#gen_mulOp(left, mulOp, factor)
+            ft = factorTail(factor);
+            if (ft == null)
+            {
+                ft = factor;
+            }
             break;
         default:
             syntaxError("',', ), or, -, +, <>, >=, <=, >, <, =, downto, to, do, until, else, then, ;, end, and, mod, div, *");
         }
+        return ft;
     }
 
-    public void multiplyingOperator() {
+    /**
+     * 
+     * @return SemanticRec RecordType.MUL_OP
+     */
+    public SemanticRec multiplyingOperator() {
+
+        SemanticRec mulOp = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_AND: //92 MultiplyingOperator -> mp_and
             out.println("92");
             match(TokenType.MP_AND);
+            mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_AND.toString());
             break;
         case MP_MOD: //91 MultiplyingOperator -> mp_mod
             out.println("91");
             match(TokenType.MP_MOD);
+            mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_MOD.toString());
             break;
         case MP_DIV: //90 MultiplyingOperator -> mp_div
             out.println("90");
             match(TokenType.MP_DIV);
+            mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_DIV.toString());
             break;
         case MP_TIMES: //89 MultiplyingOperator -> mp_times
             out.println("89");
             match(TokenType.MP_TIMES);
+            mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_TIMES.toString());
             break;
         default:
             syntaxError("and, mod, div, *");
         }
+        return mulOp;
     }
 
-    public void factor() {
+    /**
+     * 
+     * @return SemanticRec RecordType.IDENTIFIER or RecordType.LITERAL
+     */
+    public SemanticRec factor() {
+        SemanticRec factor = null;
+
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
-            Row factorVar = findSymbol(lookAhead.getLexeme());
+            Row factorVar = analyzer.findSymbol(lookAhead.getLexeme()); //TODO: Check if this needs Classification also
             if (factorVar != null) {
-                if (factorVar.getClassification() == Classification.VARIABLE || factorVar.getClassification() == Classification.PARAMETER) {
+                if (factorVar.getClassification() == Classification.VARIABLE
+                        || factorVar.getClassification() == Classification.PARAMETER) {
                     out.println("94"); //94 Factor -> VariableIdentifier
-                    variableIdentifier();
-                } else if (factorVar.getClassification() == Classification.FUNCTION) {
+                    String id = variableIdentifier();
+                    factor = new SemanticRec(RecordType.IDENTIFIER, factorVar.getClassification().toString(), id);
+                    //TODO:gen_push_id(factor)
+                    //TODO:Literal SR?
+                } else if (factorVar.getClassification() == Classification.FUNCTION) { //TODO:Add function SemanticRecs
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
                     functionIdentifier();
                     optionalActualParameterList();
+                    //TODO:#gen_func_call(ident, optParam)
                 } else {
                     semanticError("Cannot use Procedure identifier '" + lookAhead.getLexeme() + "' as factor.");
                 }
@@ -997,42 +1130,59 @@ public class Parser {
                 semanticError("Undeclared identifier: '" + lookAhead.getLexeme() + "'");
             }
 
-            //variableIdentifier();
             break;
         case MP_LPAREN: //96 Factor -> mp_lparen Expression mp_rparen
             out.println("96");
             match(TokenType.MP_LPAREN);
-            expression();
+            factor = expression();
             match(TokenType.MP_RPAREN);
             break;
         case MP_NOT: //95 Factor -> mp_not Factor
             out.println("95");
             match(TokenType.MP_NOT);
-            factor();
+            factor = factor();
+            //TODO:#gen_not_bool(factor)
             break;
         case MP_INTEGER_LIT: //93 Factor -> mp_integer_lit
             out.println("93");
+            String lex = lookAhead.getLexeme();
             match(TokenType.MP_INTEGER_LIT);
+            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_INTEGER_LIT.toString());
+            //TODO:#gen_push_lit(factor, lex)
             break;
         case MP_FALSE: //116 Factor -> mp_false
             out.println("116");
+            lex = lookAhead.getLexeme();
             match(TokenType.MP_FALSE);
+            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_FALSE.toString());
+            //TODO:#gen_push_lit(factor, lex)
             break;
         case MP_TRUE: //115 Factor -> mp_true
             out.println("115");
+            lex = lookAhead.getLexeme();
             match(TokenType.MP_TRUE);
+            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_TRUE.toString());
+            //TODO:#gen_push_lit(factor, lex)
             break;
         case MP_STRING_LIT: //114 Factor -> mp_string_lit
             out.println("114");
+            lex = lookAhead.getLexeme();
             match(TokenType.MP_STRING_LIT);
+            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_STRING_LIT.toString());
+            //TODO:#gen_push_lit(factor, lex)
             break;
         case MP_FLOAT_LIT: //113 Factor -> mp_float_lit
             out.println("113");
+            lex = lookAhead.getLexeme();
             match(TokenType.MP_FLOAT_LIT);
+            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_FLOAT_LIT.toString());
+            //TODO:#gen_push_lit(factor, lex)
             break;
         default:
             syntaxError("identifier, (, not, Integer, false, true, String, Float");
         }
+
+        return factor;
     }
 
     public String programIdentifier() {
@@ -1050,16 +1200,20 @@ public class Parser {
         return progIdentifier;
     }
 
-    public void variableIdentifier() {
+    public String variableIdentifier() {
+        String lex = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER: //99 VariableIdentifier -> mp_identifier
             out.println("99");
+            lex = lookAhead.getLexeme(); //current lexeme
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
             syntaxError("identifier");
+            break;
         }
+        return lex;
     }
 
     public void procedureIdentifier() {
@@ -1421,33 +1575,41 @@ public class Parser {
 
     public void assignmentStatement()
     {
+        String id;
+        SemanticRec varId;
+        SemanticRec exp;
+
         debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: {
-            Row assign = findSymbol(lookAhead.getLexeme());
+            Row assign = analyzer.findSymbol(lookAhead.getLexeme());
+
             if (assign == null) {
                 semanticError("Undeclared identifier " + lookAhead.getLexeme() + " found.");
             } else {
                 if (assign.getClassification() == Classification.VARIABLE) {
                     //49 AssignmentStatement -> VariableIdentifier mp_assign Expression
                     out.println("49");
-                    variableIdentifier();
+                    id = variableIdentifier();
+                    varId = new SemanticRec(RecordType.IDENTIFIER, assign.getClassification().toString(), id);
                     match(TokenType.MP_ASSIGN);
-                    expression();
+                    exp = expression();
+                    //TODO:#gen_assign(varId, exp)
                 } else if (assign.getClassification() == Classification.FUNCTION) {
                     //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression
                     out.println("50");
-                    functionIdentifier();
+                    functionIdentifier();//TODO:functionIdent SemanticRec
                     match(TokenType.MP_ASSIGN);
-                    expression();
+                    exp = expression();
+                    //TODO:#gen_assign(funcId, exp) //pushes the value on the stack
                 } else {
                     semanticError("Cannot assign value to Parameter or Procedure");
                 }
             }
         }
 
-        break;
+            break;
         default:
             syntaxError("identifier");
         }

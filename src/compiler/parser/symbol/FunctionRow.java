@@ -3,15 +3,13 @@ package compiler.parser.symbol;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionRow extends Row implements ModuleRow{
-
-    private Type returnType;
+public class FunctionRow extends Row implements ModuleRow {
 
     private List<Attribute> attributes;
 
     public FunctionRow(String lexeme, Classification classification, Type returnType, Attribute[] attributes) {
         super(lexeme, classification);
-        this.returnType = returnType;
+        setType(returnType);
         this.attributes = new ArrayList<Attribute>();
         for (Attribute a : attributes) {
             this.attributes.add(a);
@@ -20,7 +18,7 @@ public class FunctionRow extends Row implements ModuleRow{
 
     public FunctionRow(String lexeme, Classification classification, Type returnType) {
         super(lexeme, classification);
-        this.returnType = returnType;
+        setType(returnType);
         attributes = new ArrayList<Attribute>();
     }
 
@@ -29,11 +27,11 @@ public class FunctionRow extends Row implements ModuleRow{
     }
 
     public Type getReturnType() {
-        return returnType;
+        return getType();
     }
 
     public void setReturnType(Type returnType) {
-        this.returnType = returnType;
+        setType(returnType);
     }
 
     public List<Attribute> getAttributes()
@@ -44,7 +42,7 @@ public class FunctionRow extends Row implements ModuleRow{
     @Override
     public void print() {
         System.out.print("Function: " + getLexeme() + "\tattributes: ");
-        for(Attribute a: attributes)
+        for (Attribute a : attributes)
         {
             a.print();
         }

@@ -25,6 +25,7 @@ build
 *.ear
 
 parse-tree
+*.vm
 
 execute
 
