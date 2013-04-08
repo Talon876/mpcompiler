@@ -876,8 +876,8 @@ public class Parser {
             out.println("77");
             optSign = optionalSign();
             term = term();
-            //#gen_sim_negate(optSign, term) value on stack
-            analyzer.gen_sim_negate(optSign, term);
+            //#gen_opt_sim_negate(optSign, term) value on stack
+            analyzer.gen_opt_sim_negate(optSign, term);
             tt = termTail(term);
             if (tt == null)
             {

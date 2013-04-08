@@ -425,39 +425,42 @@ public class Analyzer {
      *            {@link SemanticRec} from {@link compiler.parser.Parser#term()} with {@link RecordType#LITERAL} or
      *            {@link RecordType#IDENTIFIER}
      */
-    public void gen_sim_negate(SemanticRec opSign, SemanticRec term)
+    public void gen_opt_sim_negate(SemanticRec opSign, SemanticRec term)
     {
-        Type termType = getTypeFromSR(term);
-
-        String op = opSign.getDatum(0);
-        switch (termType)
+        if(opSign != null && term != null)
         {
-        case INTEGER:
-            switch (op)
+            Type termType = getTypeFromSR(term);
+    
+            String op = opSign.getDatum(0);
+            switch (termType)
             {
-            case "MP_MINUS":
-                negateStackI();
+            case INTEGER:
+                switch (op)
+                {
+                case "MP_MINUS":
+                    negateStackI();
+                    break;
+                case "MP_PLUS":
+                    break;
+                default:
+                    Parser.semanticError(opSign + " is not a negation operator for type " + termType);
+                }
                 break;
-            case "MP_PLUS":
+            case FLOAT:
+                switch (op)
+                {
+                case "MP_MINUS":
+                    negateStackF();
+                    break;
+                case "MP_PLUS":
+                    break;
+                default:
+                    Parser.semanticError(opSign + " is not a negation operator for type " + termType);
+                }
                 break;
             default:
-                Parser.semanticError(opSign + " is not a negation operator for type " + termType);
+                Parser.semanticError(termType + "does not have a negation operation");
             }
-            break;
-        case FLOAT:
-            switch (op)
-            {
-            case "MP_MINUS":
-                negateStackF();
-                break;
-            case "MP_PLUS":
-                break;
-            default:
-                Parser.semanticError(opSign + " is not a negation operator for type " + termType);
-            }
-            break;
-        default:
-            Parser.semanticError(termType + "does not have a negation operation");
         }
     }
 
@@ -613,64 +616,67 @@ public class Analyzer {
      */
     public void gen_opt_rel_part(SemanticRec left, SemanticRec op, SemanticRec right)
     {
-        Type leftType = getTypeFromSR(left);
-        Type rightType = getTypeFromSR(right);
-
-        Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
-        String relOp = op.getDatum(0); //MP_NEQUAL, MP_GEQUAL, MP_LEQUAL, MP_GTHAN, MP_LTHAN, MP_EQUAL
-        switch (resultType)
+        if(left != null && right != null && op != null)
         {
-        case INTEGER:
-            switch (relOp)
+            Type leftType = getTypeFromSR(left);
+            Type rightType = getTypeFromSR(right);
+    
+            Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
+            String relOp = op.getDatum(0); //MP_NEQUAL, MP_GEQUAL, MP_LEQUAL, MP_GTHAN, MP_LTHAN, MP_EQUAL
+            switch (resultType)
             {
-            case "MP_NEQUAL":
-                notEqualI();
+            case INTEGER:
+                switch (relOp)
+                {
+                case "MP_NEQUAL":
+                    notEqualI();
+                    break;
+                case "MP_GEQUAL":
+                    greaterEqualI();
+                    break;
+                case "MP_LEQUAL":
+                    lessEqualI();
+                    break;
+                case "MP_GTHAN":
+                    greaterThanI();
+                    break;
+                case "MP_LTHAN":
+                    lessThanI();
+                    break;
+                case "MP_EQUAL":
+                    equalI();
+                    break;
+                default:
+                    Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
+                }
                 break;
-            case "MP_GEQUAL":
-                greaterEqualI();
-                break;
-            case "MP_LEQUAL":
-                lessEqualI();
-                break;
-            case "MP_GTHAN":
-                greaterThanI();
-                break;
-            case "MP_LTHAN":
-                lessThanI();
-                break;
-            case "MP_EQUAL":
-                equalI();
-                break;
+            case FLOAT:
+                switch (relOp)
+                {
+                case "MP_NEQUAL":
+                    notEqualF();
+                    break;
+                case "MP_GEQUAL":
+                    greaterEqualF();
+                    break;
+                case "MP_LEQUAL":
+                    lessEqualF();
+                    break;
+                case "MP_GTHAN":
+                    greaterThanF();
+                    break;
+                case "MP_LTHAN":
+                    lessThanF();
+                    break;
+                case "MP_EQUAL":
+                    equalF();
+                    break;
+                default:
+                    Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
+                }
             default:
-                Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(resultType + " does not have relational operators");
             }
-            break;
-        case FLOAT:
-            switch (relOp)
-            {
-            case "MP_NEQUAL":
-                notEqualF();
-                break;
-            case "MP_GEQUAL":
-                greaterEqualF();
-                break;
-            case "MP_LEQUAL":
-                lessEqualF();
-                break;
-            case "MP_GTHAN":
-                greaterThanF();
-                break;
-            case "MP_LTHAN":
-                lessThanF();
-                break;
-            case "MP_EQUAL":
-                equalF();
-                break;
-            default:
-                Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
-            }
-        default:
-            Parser.semanticError(resultType + " does not have relational operators");
         }
     }
 
