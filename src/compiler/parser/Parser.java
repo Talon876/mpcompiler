@@ -1075,7 +1075,8 @@ public class Parser {
             out.println("87");
             mulOp = multiplyingOperator();
             factor = factor();
-            //TODO:#gen_mulOp(left, mulOp, factor)
+            //#gen_mulOp(left, mulOp, factor)fa
+            factor = analyzer.gen_mulOp(left, mulOp, factor); //result is on stack and type could have been cast
             ft = factorTail(factor);
             if (ft == null)
             {
