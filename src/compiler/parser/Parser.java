@@ -927,7 +927,8 @@ public class Parser {
             out.println("78");
             addOp = addingOperator();
             term = term();
-            //TODO:#gen_addOp(left, addOp, term)
+            //#gen_addOp(left, addOp, term)
+            analyzer.gen_addOp(left, addOp, term);
             tt = termTail(term);
             if (tt == null)
             {

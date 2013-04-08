@@ -154,6 +154,14 @@ public class Analyzer {
         out.println("ands");
     }
     
+    /**
+     * 
+     */
+    private void or()
+    {
+        out.println("ors");
+    }
+    
     private void mulStackI()
     {
         out.println("muls");
@@ -182,6 +190,26 @@ public class Analyzer {
     private void modStackF()
     {
         out.println("modsf");
+    }
+    
+    private void subStackI()
+    {
+        out.println("subs");
+    }
+    
+    private void addStackI()
+    {
+        out.println("adds");
+    }
+    
+    private void subStackF()
+    {
+        out.println("subsf");
+    }
+    
+    private void addStackF()
+    {
+        out.println("addsf");
     }
     
     private void notEqualI()
@@ -449,6 +477,70 @@ public class Analyzer {
         }
         return new SemanticRec(RecordType.LITERAL, resultType.toString());
     }
+    
+    /**
+     * 
+     * @param left
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#term()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     * @param mulOp
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#addingOperatorOperator()} with {@link RecordType#REL_OP}
+     * @param right
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#term()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     * @return {@link RecordType#LITERAL} record from the operation
+     */
+    public SemanticRec gen_addOp(SemanticRec left, SemanticRec mulOp, SemanticRec right)
+    {
+        Type leftType = getTypeFromSR(left);
+        Type rightType = getTypeFromSR(right);
+
+        Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
+        String op = mulOp.getDatum(0);
+        switch(resultType)
+        {
+        case INTEGER:
+            switch (op)
+            {
+            case "MP_MINUS":
+                subStackI();
+                break;
+            case "MP_PLUS":
+                addStackI();
+                break;
+            default:
+                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+            }
+            break;
+        case FLOAT:
+            switch (op)
+            {
+            case "MP_MINUS":
+                subStackF();
+                break;
+            case "MP_PLUS":
+                addStackF();
+                break;
+            default:
+                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+            }
+            break;
+        case BOOLEAN:
+            switch (op)
+            {
+            case "MP_OR":
+                or();
+                break;
+            default:
+                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+            }
+            break;
+        default:
+            Parser.semanticError(resultType + "does not have a multiplication operation");  
+        }
+        return new SemanticRec(RecordType.LITERAL, resultType.toString());
+    }
+    
     /**
      * 
      */
