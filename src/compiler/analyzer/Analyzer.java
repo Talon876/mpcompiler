@@ -145,7 +145,7 @@ public class Analyzer {
     {
         out.println("nots");
     }
-    
+
     /**
      * 
      */
@@ -153,7 +153,7 @@ public class Analyzer {
     {
         out.println("ands");
     }
-    
+
     /**
      * 
      */
@@ -161,55 +161,64 @@ public class Analyzer {
     {
         out.println("ors");
     }
-    
+
     private void mulStackI()
     {
         out.println("muls");
     }
-    
+
     private void divStackI()
     {
         out.println("divs");
     }
-    
+
     private void modStackI()
     {
         out.println("mods");
     }
-    
+
     private void mulStackF()
     {
         out.println("mulsf");
     }
-    
+
     private void divStackF()
     {
         out.println("divsf");
     }
-    
+
     private void modStackF()
     {
         out.println("modsf");
     }
-    
+
     private void subStackI()
     {
         out.println("subs");
     }
-    
+
     private void addStackI()
     {
         out.println("adds");
     }
-    
+
     private void subStackF()
     {
         out.println("subsf");
     }
-    
+
     private void addStackF()
     {
         out.println("addsf");
+    }
+
+    private void negateStackI()
+    {
+        out.println("negs");
+    }
+    private void negateStackF()
+    {
+        out.println("negsf");
     }
     
     private void notEqualI()
@@ -399,13 +408,56 @@ public class Analyzer {
     public void gen_not_bool(SemanticRec factor)
     {
         Type factorType = getTypeFromSR(factor);
-        switch(factorType)
+        switch (factorType)
         {
         case BOOLEAN:
             not();
             break;
-         default:
-             Parser.semanticError("Not operator expected BOOLEAN found " + factorType.toString());
+        default:
+            Parser.semanticError("Not operator expected BOOLEAN found " + factorType.toString());
+        }
+    }
+
+    /**
+     * 
+     * @param opSign {@link SemanticRec} from {@link compiler.parser.Parser#optionalSign()} with {@link RecordType#OPT_SIGN}
+     * @param term
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#term()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     */
+    public void gen_sim_negate(SemanticRec opSign, SemanticRec term)
+    {
+        Type termType = getTypeFromSR(term);
+
+        String op = opSign.getDatum(0);
+        switch (termType)
+        {
+        case INTEGER:
+            switch (op)
+            {
+            case "MP_MINUS":
+                negateStackI();
+                break;
+            case "MP_PLUS":
+                break;
+            default:
+                Parser.semanticError(opSign + " is not a negation operator for type " + termType);
+            }
+            break;
+        case FLOAT:
+            switch (op)
+            {
+            case "MP_MINUS":
+                negateStackF();
+                break;
+            case "MP_PLUS":
+                break;
+            default:
+                Parser.semanticError(opSign + " is not a negation operator for type " + termType);
+            }
+            break;
+        default:
+            Parser.semanticError(termType + "does not have a negation operation");
         }
     }
 
@@ -428,7 +480,7 @@ public class Analyzer {
 
         Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
         String op = mulOp.getDatum(0);
-        switch(resultType)
+        switch (resultType)
         {
         case INTEGER:
             switch (op)
@@ -443,7 +495,7 @@ public class Analyzer {
                 mulStackI();
                 break;
             default:
-                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
             }
             break;
         case FLOAT:
@@ -459,7 +511,7 @@ public class Analyzer {
                 mulStackF();
                 break;
             default:
-                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
             }
             break;
         case BOOLEAN:
@@ -469,15 +521,15 @@ public class Analyzer {
                 and();
                 break;
             default:
-                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
             }
             break;
         default:
-            Parser.semanticError(resultType + "does not have a multiplication operation");  
+            Parser.semanticError(resultType + "does not have a multiplication operation");
         }
         return new SemanticRec(RecordType.LITERAL, resultType.toString());
     }
-    
+
     /**
      * 
      * @param left
@@ -490,14 +542,14 @@ public class Analyzer {
      *            {@link RecordType#IDENTIFIER}
      * @return {@link RecordType#LITERAL} record from the operation
      */
-    public SemanticRec gen_addOp(SemanticRec left, SemanticRec mulOp, SemanticRec right)
+    public SemanticRec gen_addOp(SemanticRec left, SemanticRec addOp, SemanticRec right)
     {
         Type leftType = getTypeFromSR(left);
         Type rightType = getTypeFromSR(right);
 
         Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
-        String op = mulOp.getDatum(0);
-        switch(resultType)
+        String op = addOp.getDatum(0);
+        switch (resultType)
         {
         case INTEGER:
             switch (op)
@@ -509,7 +561,7 @@ public class Analyzer {
                 addStackI();
                 break;
             default:
-                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(op + " is not a adding operator for type " + resultType);
             }
             break;
         case FLOAT:
@@ -522,7 +574,7 @@ public class Analyzer {
                 addStackF();
                 break;
             default:
-                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(op + " is not a adding operator for type " + resultType);
             }
             break;
         case BOOLEAN:
@@ -532,15 +584,15 @@ public class Analyzer {
                 or();
                 break;
             default:
-                Parser.semanticError(mulOp + " is not a relational operator for type " + resultType);
+                Parser.semanticError(op + " is not a adding operator for type " + resultType);
             }
             break;
         default:
-            Parser.semanticError(resultType + "does not have a multiplication operation");  
+            Parser.semanticError(resultType + "does not have an adding operation");
         }
         return new SemanticRec(RecordType.LITERAL, resultType.toString());
     }
-    
+
     /**
      * 
      */

@@ -797,7 +797,7 @@ public class Parser {
             op = relationalOperator();
             right = simpleExpression();
             //#gen_opt_rel_part(left, op, right) //leaves boolean on stack
-            //analyzer.gen_opt_rel_part(left, op, right); //TODO:push values on the stack first before uncommenting, currently the code will return null
+            analyzer.gen_opt_rel_part(left, op, right);
             opt = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString());
             break;
         default:
@@ -876,7 +876,8 @@ public class Parser {
             out.println("77");
             optSign = optionalSign();
             term = term();
-            //TODO:#gen_sim_negate(optSign, term) value on stack
+            //#gen_sim_negate(optSign, term) value on stack
+            analyzer.gen_sim_negate(optSign, term);
             tt = termTail(term);
             if (tt == null)
             {
