@@ -1,0 +1,19 @@
+program commentNestingTest; 
+var train, tree, speaker, couch, ba_con: Integer;
+	hello, goodbye: Boolean;
+	crazy: String;
+	omg, nom: Float;
+{
+	{arg1 was a FLOAT and a parameter lol}
+    {things(true, false); procedure calls currently not implemented}
+}
+begin
+	hello := true;
+	goodbye :=false;
+	crazy := 'crazy train';
+	omg := 2E10;
+    goodbye := not goodbye;
+    Write(crazy, ' , ', goodbye, ' , ', hello, ' , ', omg);
+    WriteLN(' ');
+	WriteLN(crazy, goodbye, hello, omg);
+end.

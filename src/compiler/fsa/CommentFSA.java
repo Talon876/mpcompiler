@@ -22,6 +22,7 @@ public class CommentFSA implements FSA {
         String lexeme = "";
         char current = 0;
 
+        int openBraceCount = 0; //needed for nested comments
         while (state != 3) {
 
             /*
@@ -38,6 +39,7 @@ public class CommentFSA implements FSA {
                     current = file.getNextCharacter(true);
                     if (current == '{') // always true
                     {
+                        openBraceCount++;
                         state = 2;
                     }
                     break;
@@ -46,10 +48,15 @@ public class CommentFSA implements FSA {
                         current = file.getCurrentCharacter();
                         if (current == '}') {
                             file.getNextCharacter(true);
-                            state = 3;
+                            openBraceCount--;
+                            if(openBraceCount == 0)
+                            {
+                                state = 3;
+                            }
                         } else if (current == '{') {
                             System.out.println("WARNING: { found inside comment, double check comments. Found at line "
                                     + file.getLineIndex() + " column " + file.getColumnIndex());
+                            openBraceCount++;
                             lexeme += file.getNextCharacter(true);
                         } else {
                             lexeme += file.getNextCharacter(true);

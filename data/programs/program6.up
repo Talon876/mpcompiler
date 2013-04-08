@@ -3,7 +3,7 @@ var train, tree, speaker, couch, ba_con: Integer;
 	hello, goodbye: Boolean;
 	crazy: String;
 	omg, nom: Float;
-
+{
     procedure doMath(x1, y1, x2, y2 : Integer);
     begin
         tree := x1 + x2 * y2 div y1;
@@ -36,7 +36,8 @@ var train, tree, speaker, couch, ba_con: Integer;
     begin
         gamma := omg;
     end;
-
+functions/procedures not implemented yet... needs labels to jump over the function definitions
+}
 begin
 	hello := true;
 	goodbye :=false;
@@ -45,5 +46,6 @@ begin
     {ba_con := beta(omg, nom); assignment from procedures is currently not implemented}
     goodbye := not goodbye;
     Write(crazy, ' , ', goodbye, ' , ', hello, ' , ', omg);
+    WriteLN(' ');
 	WriteLN(crazy, goodbye, hello, omg);
 end.
