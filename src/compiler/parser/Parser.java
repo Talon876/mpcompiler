@@ -1144,7 +1144,7 @@ public class Parser {
                     String id = variableIdentifier();
                     factor = new SemanticRec(RecordType.IDENTIFIER, factorVar.getClassification().toString(), id);
                     //#gen_push_id(factor, classification)
-                    analyzer.gen_push_id(factor);
+                    factor = analyzer.gen_push_id(factor); //once the Ident has been pushed onto the stack it is now a literal value //TODO:update documentation to reflect that IDENTIFIER isn't returned
                     //TODO:Literal SR?
                 } else if (factorVar.getClassification() == Classification.FUNCTION) { //TODO:Add function SemanticRecs
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
@@ -1171,13 +1171,13 @@ public class Parser {
             factor = factor();
             //#gen_not_bool(factor)
             analyzer.gen_not_bool(factor);
-            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_BOOLEAN.toString()); //the result is a boolean on the top of the stack
+            factor = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString()); //the result is a boolean on the top of the stack
             break;
         case MP_INTEGER_LIT: //93 Factor -> mp_integer_lit
             out.println("93");
             String lex = lookAhead.getLexeme();
             match(TokenType.MP_INTEGER_LIT);
-            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_INTEGER_LIT.toString());
+            factor = new SemanticRec(RecordType.LITERAL, Type.INTEGER.toString());
             //#gen_push_lit(factor, lex)
             analyzer.gen_push_lit(factor, lex);
             break;
@@ -1185,7 +1185,7 @@ public class Parser {
             out.println("116");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_FALSE);
-            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_FALSE.toString());
+            factor = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString());
             //#gen_push_lit(factor, lex)
             analyzer.gen_push_lit(factor, lex);
             break;
@@ -1193,7 +1193,7 @@ public class Parser {
             out.println("115");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_TRUE);
-            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_TRUE.toString());
+            factor = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString());
             //#gen_push_lit(factor, lex)
             analyzer.gen_push_lit(factor, lex);
             break;
@@ -1201,7 +1201,7 @@ public class Parser {
             out.println("114");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_STRING_LIT);
-            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_STRING_LIT.toString());
+            factor = new SemanticRec(RecordType.LITERAL, Type.STRING.toString());
             //#gen_push_lit(factor, lex)
             analyzer.gen_push_lit(factor, lex);
             break;
@@ -1209,7 +1209,7 @@ public class Parser {
             out.println("113");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_FLOAT_LIT);
-            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_FLOAT_LIT.toString());
+            factor = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
             //#gen_push_lit(factor, lex)
             analyzer.gen_push_lit(factor, lex);
             break;
@@ -1548,16 +1548,19 @@ public class Parser {
             out.println("45");
             match(TokenType.MP_WRITE);
             match(TokenType.MP_LPAREN);
-            writeParameter();
-            writeParameterTail();
+            SemanticRec mpwrite = new SemanticRec(RecordType.WRIT_STMT, TokenType.MP_WRITE.toString());
+            writeParameter(mpwrite);
+            writeParameterTail(mpwrite);
+            
             match(TokenType.MP_RPAREN);
             break;
         case MP_WRITELN: //111 WriteStatement -> mp_writeln mp_lparen WriteParameter WriteParameterTail mp_rparen.
             out.println("111");
             match(TokenType.MP_WRITELN);
             match(TokenType.MP_LPAREN);
-            writeParameter();
-            writeParameterTail();
+            SemanticRec mpwriteln = new SemanticRec(RecordType.WRIT_STMT, TokenType.MP_WRITELN.toString());
+            writeParameter(mpwriteln);
+            writeParameterTail(mpwriteln);
             match(TokenType.MP_RPAREN);
             break;
         default:
@@ -1565,16 +1568,21 @@ public class Parser {
         }
     }
 
-    public void writeParameterTail()
+    /**
+     * 
+     * @param writeStmt {@link RecordType#WRITE_STMT}
+     */
+    public void writeParameterTail(SemanticRec writeStmt)
     {
+        
         debug();
         switch (lookAhead.getType())
         {
         case MP_COMMA: //46 WriteParameterTail -> mp_comma WriteParameter WriteParameterTail
             out.println("46");
             match(TokenType.MP_COMMA);
-            writeParameter();
-            writeParameterTail();
+            writeParameter(writeStmt);
+            writeParameterTail(writeStmt);
             break;
         case MP_RPAREN: //47 WriteParameterTail -> &epsilon
             out.println("47");
@@ -1585,7 +1593,11 @@ public class Parser {
         }
     }
 
-    public void writeParameter()
+    /**
+     *  
+     * @param writeStmt {@link RecordType#WRITE_STMT}
+     */
+    public void writeParameter(SemanticRec writeStmt)
     {
         debug();
         switch (lookAhead.getType())
@@ -1601,7 +1613,9 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS:
             out.println("48");
-            ordinalExpression();
+            SemanticRec exp = ordinalExpression();
+            //#gen_writestmt(writestmt, exp)
+            analyzer.gen_writeStmt(writeStmt, exp);
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
@@ -1630,7 +1644,8 @@ public class Parser {
                     varId = new SemanticRec(RecordType.IDENTIFIER, assign.getClassification().toString(), id);
                     match(TokenType.MP_ASSIGN);
                     exp = expression();
-                    //TODO:#gen_assign(varId, exp)
+                    //#gen_assign(varId, exp)
+                    analyzer.gen_assign(varId, exp);
                 } else if (assign.getClassification() == Classification.FUNCTION) {
                     //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression
                     out.println("50");
@@ -1688,8 +1703,9 @@ public class Parser {
         }
     }
 
-    public void ordinalExpression()
+    public SemanticRec ordinalExpression()
     {
+        SemanticRec ord = null;
         debug();
         switch (lookAhead.getType())
         {
@@ -1704,11 +1720,12 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS:
             out.println("103");
-            expression();
+            ord = expression();
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
+        return ord;
     }
 
     public List<String> identifierList()

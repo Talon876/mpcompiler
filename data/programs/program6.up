@@ -15,6 +15,7 @@ var train, tree, speaker, couch, ba_con: Integer;
 	    function alphaprime:integer;
 	    var alphafirst: integer;
 	    	begin
+	    		alphafirst := -nom;
 	    	end;
     begin
         speaker := first - second;
@@ -23,11 +24,11 @@ var train, tree, speaker, couch, ba_con: Integer;
     function beta(var arg1, arg2:float; arg3:boolean):integer;
         procedure things(z1, z2: boolean);
         begin
-            arg1 := true;
+            hello := true; {arg1 was a FLOAT and a parameter lol}
             omg := 5.5e1;
         end;
     begin
-        things(true, false);
+        {things(true, false); procedure calls currently not implemented}
     end;
 
     function gamma(a1, a2: boolean):float;
@@ -41,7 +42,8 @@ begin
 	goodbye :=false;
 	crazy := 'crazy train';
 	omg := 2E10;
-    ba_con := beta(omg, nom);
+    {ba_con := beta(omg, nom); assignment from procedures is currently not implemented}
     goodbye := not goodbye;
-	WriteLN(crazy);
+    Write(crazy, ' , ', goodbye, ' , ', hello, ' , ', omg);
+	WriteLN(crazy, goodbye, hello, omg);
 end.

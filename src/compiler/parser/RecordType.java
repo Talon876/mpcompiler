@@ -29,5 +29,9 @@ public enum RecordType {
     /**
      * Data is Current Symbol Table Name, Current Symbol Table Level, Current Table Size
      */
-    SYM_TBL
+    SYM_TBL,
+    /**
+     * Data is TokenType.MP_WriteLN or TokenType.Write
+     */
+    WRIT_STMT
 }

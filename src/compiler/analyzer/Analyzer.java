@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Stack;
 
 import compiler.TokenType;
@@ -216,11 +217,12 @@ public class Analyzer {
     {
         out.println("negs");
     }
+
     private void negateStackF()
     {
         out.println("negsf");
     }
-    
+
     private void notEqualI()
     {
         out.println("cmpnes");
@@ -281,6 +283,25 @@ public class Analyzer {
         out.println("cmpeqsf");
     }
 
+    private void castStackToI()
+    {
+        out.println("castsi");
+    }
+
+    private void castStackToF()
+    {
+        out.println("castsf");
+    }
+
+    private void writeStack()
+    {
+        out.println("wrts");
+    }
+    
+    private void writelnStack()
+    {
+        out.println("wrtlns");
+    }
     /**
      * Halts program execution
      */
@@ -345,7 +366,7 @@ public class Analyzer {
      * @param factor
      *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#IDENTIFIER}
      */
-    public void gen_push_id(SemanticRec factor)
+    public SemanticRec gen_push_id(SemanticRec factor)
     {
         DataRow data = (DataRow) getIdRowFromSR(factor); //variableIdentifier is either parameter or variable
         SymbolTable tbl = findSymbolTable(data);
@@ -353,6 +374,7 @@ public class Analyzer {
         comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
                 + " offset: " + offset);
         push(offset);
+        return new SemanticRec(RecordType.LITERAL, data.getType().toString());
     }
 
     /**
@@ -363,23 +385,27 @@ public class Analyzer {
     public void gen_push_lit(SemanticRec lit, String lexeme)
     {
         String type = lit.getDatum(0);
-        TokenType tt = TokenType.valueOf(type);
+        Type tt = Type.valueOf(type);
         comment("push lexeme: " + lexeme + " type: " + type);
         switch (tt)
         {
-        case MP_STRING_LIT:
+        case STRING:
             push("#\"" + lexeme + "\"");
             break;
-        case MP_TRUE:
-            push("#1");
+        case BOOLEAN:
+            if(lexeme.equalsIgnoreCase("true"))
+            {
+                push("#1");
+            }
+            else
+            {
+                push("#0");
+            }
             break;
-        case MP_FALSE:
-            push("#0");
-            break;
-        case MP_INTEGER_LIT:
+        case INTEGER:
             push("#" + lexeme);
             break;
-        case MP_FLOAT_LIT:
+        case FLOAT:
             if (lexeme.toLowerCase().contains("e") && !lexeme.contains(".")) //Workaround to convert from micropascal float to C scanf float
             {
                 /*
@@ -420,17 +446,18 @@ public class Analyzer {
 
     /**
      * 
-     * @param opSign {@link SemanticRec} from {@link compiler.parser.Parser#optionalSign()} with {@link RecordType#OPT_SIGN}
+     * @param opSign
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#optionalSign()} with {@link RecordType#OPT_SIGN}
      * @param term
      *            {@link SemanticRec} from {@link compiler.parser.Parser#term()} with {@link RecordType#LITERAL} or
      *            {@link RecordType#IDENTIFIER}
      */
     public void gen_opt_sim_negate(SemanticRec opSign, SemanticRec term)
     {
-        if(opSign != null && term != null)
+        if (opSign != null && term != null)
         {
             Type termType = getTypeFromSR(term);
-    
+
             String op = opSign.getDatum(0);
             switch (termType)
             {
@@ -478,10 +505,9 @@ public class Analyzer {
      */
     public SemanticRec gen_mulOp(SemanticRec left, SemanticRec mulOp, SemanticRec right)
     {
-        Type leftType = getTypeFromSR(left);
-        Type rightType = getTypeFromSR(right);
 
-        Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
+        SemanticRec[] results = gen_cast(left, right); //generates casting operations if needed
+        Type resultType = getTypeFromSR(results[0]); //the types are equal at this point
         String op = mulOp.getDatum(0);
         switch (resultType)
         {
@@ -547,10 +573,9 @@ public class Analyzer {
      */
     public SemanticRec gen_addOp(SemanticRec left, SemanticRec addOp, SemanticRec right)
     {
-        Type leftType = getTypeFromSR(left);
-        Type rightType = getTypeFromSR(right);
 
-        Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
+        SemanticRec[] results = gen_cast(left, right); //generates casting operations if needed
+        Type resultType = getTypeFromSR(results[0]); //both sides should have equal types
         String op = addOp.getDatum(0);
         switch (resultType)
         {
@@ -598,9 +623,29 @@ public class Analyzer {
 
     /**
      * 
+     * @param id
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#variableIdentifier()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     * @param exp
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
      */
-    public void gen_assign() {
+    public void gen_assign(SemanticRec id, SemanticRec exp) {
 
+        SemanticRec result = gen_assign_cast(id, exp);
+
+        Row leftRow = getIdRowFromSR(id);
+        if (leftRow.getClassification() == Classification.VARIABLE)
+        {
+            SymbolTable leftTable = findSymbolTable(leftRow);
+            String leftOffset = generateOffset(leftTable, (DataRow) leftRow);
+            //rightside is ontop of the stack pop into destination
+            pop(leftOffset); //pop into left
+        }
+        else if (leftRow.getClassification() == Classification.FUNCTION) //TODO:Function stuff here
+        {
+
+        }
     }
 
     /**
@@ -616,12 +661,11 @@ public class Analyzer {
      */
     public void gen_opt_rel_part(SemanticRec left, SemanticRec op, SemanticRec right)
     {
-        if(left != null && right != null && op != null)
+        if (left != null && right != null && op != null)
         {
-            Type leftType = getTypeFromSR(left);
-            Type rightType = getTypeFromSR(right);
-    
-            Type resultType = gen_cast(leftType, rightType); //generates casting operations if needed
+
+            SemanticRec[] results = gen_cast(left, right); //generates casting operations if needed
+            Type resultType = getTypeFromSR(results[0]); //They will both be equal at this point
             String relOp = op.getDatum(0); //MP_NEQUAL, MP_GEQUAL, MP_LEQUAL, MP_GTHAN, MP_LTHAN, MP_EQUAL
             switch (resultType)
             {
@@ -681,29 +725,48 @@ public class Analyzer {
     }
 
     /**
+     * Casts Ids or Literals to the less restrictive type to preserve precision Int, Float the Int is cast to a Float
      * 
-     * @param leftType
+     * @param left
      *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
-     * @param rightType
+     * @param right
      *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
-     * @return resulting Type
+     * @return resulting SemanticRec idx 0 is left idx 1 is right
      */
-    public Type gen_cast(Type leftType, Type rightType)
+    public SemanticRec[] gen_cast(SemanticRec left, SemanticRec right)
     {
+        Type leftType = getTypeFromSR(left);
+        Type rightType = getTypeFromSR(right);
+
+        SemanticRec[] arrRec = new SemanticRec[2];
         if (leftType == rightType)
         {
             //no cast needed
-            return leftType;
+            arrRec[0] = left;
+            arrRec[1] = right;
         }
         else if ((leftType == Type.INTEGER) && rightType == Type.FLOAT)
         {
-            //cast to integer
-            return leftType;
+            //cast left to float
+            /*
+             * The following cast works because of the way the stack in the VM is initialized
+             * when the stack pointer is moved back the value that use to be on top is not lost just not currently in "scope"
+             * once the cast happens on the new "top" the pointer is moved back and it was like nothing happened to the value
+             */
+            comment("start cast left to float");
+            sub("SP", "#1", "SP"); //move to the left var on the stack
+            castStackToF();
+            add("SP", "#1", "SP"); //move back to original place
+            comment("end cast left to float");
+            arrRec[0] = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
+            arrRec[1] = right;
         }
         else if (leftType == Type.FLOAT && (rightType == Type.INTEGER))
         {
-            //cast to float
-            return leftType;
+            //cast right to float
+            castStackToF(); //top value
+            arrRec[0] = left;
+            arrRec[1] = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
         }
         else
         {
@@ -711,8 +774,61 @@ public class Analyzer {
             Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
             return null;
         }
+        return arrRec;
     }
 
+    /**
+     * 
+     * @param leftType
+     *            {@link RecordType#IDENTIFIER}
+     * @param rightType
+     *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
+     * @return expression's resulting SemanticRec if it is a {@link RecordType#LITERAL}
+     */
+    public SemanticRec gen_assign_cast(SemanticRec left, SemanticRec right)
+    {
+        Type leftType = getTypeFromSR(left);
+        Type rightType = getTypeFromSR(right);
+
+        SemanticRec returnRec = null;
+        if (leftType == rightType)
+        {
+            //no cast needed
+            returnRec = right; //the expressions RecordType is unchanged
+        }
+        else if ((leftType == Type.INTEGER) && rightType == Type.FLOAT)
+        {
+            //cast to integer
+            castStackToI();
+            returnRec = new SemanticRec(RecordType.LITERAL, Type.INTEGER.toString()); //now an integer on the stack
+        }
+        else if (leftType == Type.FLOAT && (rightType == Type.INTEGER))
+        {
+            //cast to float
+            castStackToF();
+            returnRec = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString()); //now a float on the stack
+        }
+        else
+        {
+            //invalid cast
+            Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
+        }
+
+        return returnRec;
+    }
+
+    public void gen_writeStmt(SemanticRec writeStmt, SemanticRec exp)
+    {
+        String writeType = writeStmt.getDatum(0);
+        if(writeType.equalsIgnoreCase(TokenType.MP_WRITE.toString()))
+        {
+            writeStack();
+        }
+        else
+        {
+            writelnStack();
+        }
+    }
     public Row findSymbol(String lexeme) {
         for (int i = symboltables.size() - 1; i >= 0; i--) {
             SymbolTable st = symboltables.get(i);
