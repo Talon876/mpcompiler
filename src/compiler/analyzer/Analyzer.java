@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Stack;
 
+import compiler.TokenType;
 import compiler.parser.Parser;
 import compiler.parser.SemanticRec;
 import compiler.parser.symbol.Classification;
+import compiler.parser.symbol.DataRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
@@ -61,11 +63,22 @@ public class Analyzer {
         {
             t = Type.valueOf(sr.getDatum(0));
         }
+        else //TODO: add Function rows here
+        {
+            Parser.semanticError("RecordType" + sr.getRecType() + " does not have a Type");
+        }
         return t;
     }
 
     private String getRegisterFromNL(String nestLvl) {
         return "D" + nestLvl;
+    }
+
+    private String generateOffset(SymbolTable tbl, DataRow data) {
+        String nesting = "" + tbl.getNestingLevel();
+        String memOffset = "" + data.getMemOffset();
+        nesting = getRegisterFromNL(nesting);
+        return memOffset + "(" + nesting + ")";
     }
 
     /*
@@ -125,6 +138,14 @@ public class Analyzer {
         out.println("sub " + src1 + " " + src2 + " " + dst);
     }
 
+    /**
+     * 
+     */
+    private void not()
+    {
+        out.println("nots");
+    }
+    
     private void notEqualI()
     {
         out.println("cmpnes");
@@ -246,6 +267,84 @@ public class Analyzer {
 
     /**
      * 
+     * @param factor
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#IDENTIFIER}
+     */
+    public void gen_push_id(SemanticRec factor)
+    {
+        DataRow data = (DataRow) getIdRowFromSR(factor); //variableIdentifier is either parameter or variable
+        SymbolTable tbl = findSymbolTable(data);
+        String offset = generateOffset(tbl, data);
+        comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+                + " offset: " + offset);
+        push(offset);
+    }
+
+    /**
+     * 
+     * @param lit
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#LITERAL}
+     */
+    public void gen_push_lit(SemanticRec lit, String lexeme)
+    {
+        String type = lit.getDatum(0);
+        TokenType tt = TokenType.valueOf(type);
+        comment("push lexeme: " + lexeme + " type: " + type);
+        switch (tt)
+        {
+        case MP_STRING_LIT:
+            push("#\"" + lexeme + "\"");
+            break;
+        case MP_TRUE:
+            push("#1");
+            break;
+        case MP_FALSE:
+            push("#0");
+            break;
+        case MP_INTEGER_LIT:
+            push("#" + lexeme);
+            break;
+        case MP_FLOAT_LIT:
+            if (lexeme.toLowerCase().contains("e") && !lexeme.contains(".")) //Workaround to convert from micropascal float to C scanf float
+            {
+                /*
+                 * If the float has an "e" in it but does not have a "." add a ".0" before the "e"
+                 * In the current micropascal definition if you have an "e" and a "." it must have a digit after the "." which would be legal in C also
+                 */
+                int split = lexeme.toLowerCase().indexOf("e");
+                String start = lexeme.substring(0, split);
+                String end = lexeme.substring(split);
+                lexeme = start + ".0" + end;
+            }
+            push("#" + lexeme);
+            break;
+        default:
+            Parser.semanticError(lexeme + " of type " + tt.toString() + " cannot be pushed onto the stack");
+
+        }
+    }
+
+    /**
+     * 
+     * @param factor
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     */
+    public void gen_not_bool(SemanticRec factor)
+    {
+        Type factorType = getTypeFromSR(factor);
+        switch(factorType)
+        {
+        case BOOLEAN:
+            not();
+            break;
+         default:
+             Parser.semanticError("Not operator expected BOOLEAN found " + factorType.toString());
+        }
+    }
+
+    /**
+     * 
      */
     public void gen_assign() {
 
@@ -261,6 +360,7 @@ public class Analyzer {
      * @param right
      *            {@link SemanticRec} from {@link compiler.parser.Parser#simpleExpression()} with {@link RecordType#LITERAL} or
      *            {@link RecordType#IDENTIFIER}
+     * @return {@link RecordType#LITERAL} record from the operation
      */
     public void gen_opt_rel_part(SemanticRec left, SemanticRec op, SemanticRec right)
     {
@@ -380,4 +480,15 @@ public class Analyzer {
         return null;
     }
 
+    public SymbolTable findSymbolTable(Row symbol)
+    {
+        for (int i = symboltables.size() - 1; i >= 0; i--) {
+            SymbolTable st = symboltables.get(i);
+            boolean s = st.contains(symbol);
+            if (s == true) {
+                return st;
+            }
+        }
+        return null;
+    }
 }

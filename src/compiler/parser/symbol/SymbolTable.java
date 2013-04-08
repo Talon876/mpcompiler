@@ -83,6 +83,15 @@ public class SymbolTable implements Printable {
         return null;
     }
 
+    public boolean contains(Row symbol)
+    {
+        for (Row r : rows) {
+            if (r.equals(symbol)) {
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     public void print()
     {

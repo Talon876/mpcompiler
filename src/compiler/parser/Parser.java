@@ -1140,7 +1140,8 @@ public class Parser {
                     out.println("94"); //94 Factor -> VariableIdentifier
                     String id = variableIdentifier();
                     factor = new SemanticRec(RecordType.IDENTIFIER, factorVar.getClassification().toString(), id);
-                    //TODO:gen_push_id(factor)
+                    //#gen_push_id(factor, classification)
+                    analyzer.gen_push_id(factor);
                     //TODO:Literal SR?
                 } else if (factorVar.getClassification() == Classification.FUNCTION) { //TODO:Add function SemanticRecs
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
@@ -1165,42 +1166,49 @@ public class Parser {
             out.println("95");
             match(TokenType.MP_NOT);
             factor = factor();
-            //TODO:#gen_not_bool(factor)
+            //#gen_not_bool(factor)
+            analyzer.gen_not_bool(factor);
+            factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_BOOLEAN.toString()); //the result is a boolean on the top of the stack
             break;
         case MP_INTEGER_LIT: //93 Factor -> mp_integer_lit
             out.println("93");
             String lex = lookAhead.getLexeme();
             match(TokenType.MP_INTEGER_LIT);
             factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_INTEGER_LIT.toString());
-            //TODO:#gen_push_lit(factor, lex)
+            //#gen_push_lit(factor, lex)
+            analyzer.gen_push_lit(factor, lex);
             break;
         case MP_FALSE: //116 Factor -> mp_false
             out.println("116");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_FALSE);
             factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_FALSE.toString());
-            //TODO:#gen_push_lit(factor, lex)
+            //#gen_push_lit(factor, lex)
+            analyzer.gen_push_lit(factor, lex);
             break;
         case MP_TRUE: //115 Factor -> mp_true
             out.println("115");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_TRUE);
             factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_TRUE.toString());
-            //TODO:#gen_push_lit(factor, lex)
+            //#gen_push_lit(factor, lex)
+            analyzer.gen_push_lit(factor, lex);
             break;
         case MP_STRING_LIT: //114 Factor -> mp_string_lit
             out.println("114");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_STRING_LIT);
             factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_STRING_LIT.toString());
-            //TODO:#gen_push_lit(factor, lex)
+            //#gen_push_lit(factor, lex)
+            analyzer.gen_push_lit(factor, lex);
             break;
         case MP_FLOAT_LIT: //113 Factor -> mp_float_lit
             out.println("113");
             lex = lookAhead.getLexeme();
             match(TokenType.MP_FLOAT_LIT);
             factor = new SemanticRec(RecordType.LITERAL, TokenType.MP_FLOAT_LIT.toString());
-            //TODO:#gen_push_lit(factor, lex)
+            //#gen_push_lit(factor, lex)
+            analyzer.gen_push_lit(factor, lex);
             break;
         default:
             syntaxError("identifier, (, not, Integer, false, true, String, Float");

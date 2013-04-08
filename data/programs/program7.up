@@ -1,0 +1,6 @@
+program FloatTest;
+
+ var I: Float;
+ begin
+    I := 5.0E10;
+ end.

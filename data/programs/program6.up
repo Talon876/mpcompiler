@@ -42,5 +42,6 @@ begin
 	crazy := 'crazy train';
 	omg := 2E10;
     ba_con := beta(omg, nom);
+    goodbye := not goodbye;
 	WriteLN(crazy);
 end.
