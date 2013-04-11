@@ -8,6 +8,9 @@ var train, tree, speaker, couch, ba_con: Integer;
     {things(true, false); procedure calls currently not implemented}
 }
 begin
+	Write('Enter two Integers: ');
+	Read(train, tree);
+	Write(train, ' , ', tree, '\n');
 	hello := true;
 	goodbye :=false;
 	crazy := 'crazy train';

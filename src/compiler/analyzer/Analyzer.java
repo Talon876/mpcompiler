@@ -302,6 +302,21 @@ public class Analyzer {
     {
         out.println("wrtlns");
     }
+    
+    private void readI(String offset)
+    {
+        out.println("rd " + offset);
+    }
+    
+    private void readF(String offset)
+    {
+        out.println("rdf " + offset);
+    }
+    
+    private void readS(String offset)
+    {
+        out.println("rds " + offset);
+    }
     /**
      * Halts program execution
      */
@@ -829,6 +844,31 @@ public class Analyzer {
             writelnStack();
         }
     }
+    
+    public void gen_readStmt(SemanticRec readStmt)
+    {
+        DataRow row = (DataRow) getIdRowFromSR(readStmt);
+        Type type = row.getType();
+        SymbolTable table = findSymbolTable(row);
+        String offset = generateOffset(table, row);
+        
+        switch(type)
+        {
+        case INTEGER:
+            readI(offset);
+            break;
+        case FLOAT:
+            readF(offset);
+            break;
+        case STRING:
+            readS(offset);
+            break;
+        default:
+            Parser.semanticError("Cannot read from console into variable of type: " + type.toString());
+        }
+        
+    }
+    
     public Row findSymbol(String lexeme) {
         for (int i = symboltables.size() - 1; i >= 0; i--) {
             SymbolTable st = symboltables.get(i);

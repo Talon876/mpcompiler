@@ -1527,12 +1527,16 @@ public class Parser {
 
     public void readParameter()
     {
+        SemanticRec readID = null;
         debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //44 ReadParameter -> VariableIdentifier
             out.println("44");
-            variableIdentifier();
+            String id = variableIdentifier();
+            readID = new SemanticRec(RecordType.IDENTIFIER, Classification.VARIABLE.toString(), id);
+            //#gen_readStmt(readID)
+            analyzer.gen_readStmt(readID);
             break;
         default:
             syntaxError("identifier");
