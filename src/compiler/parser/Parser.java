@@ -461,13 +461,21 @@ public class Parser {
         debug();
         switch (lookAhead.getType())
         {
-        case MP_IF: //51 IfStatement -> mp_if BooleanExpression mp_then Statement OptionalElsePart
+        case MP_IF: //51 IfStatement -> mp_if BooleanExpression mp_then #gen_branch_false Statement OptionalElsePart
             out.println("51");
             match(TokenType.MP_IF);
             booleanExpression();
             match(TokenType.MP_THEN);
+            analyzer.gen_comment("if");
+            SemanticRec elseLabel = analyzer.gen_branch_false(); //brfs to else statements
             statement();
+            analyzer.gen_comment("skip else part");
+            SemanticRec endLabel = analyzer.gen_unconditional_branch(); //br to end of if
+            analyzer.gen_comment("else part");
+            analyzer.gen_specified_label(elseLabel);
             optionalElsePart();
+            analyzer.gen_comment("end label");
+            analyzer.gen_specified_label(endLabel);
             break;
         default:
             syntaxError("if");
@@ -1555,7 +1563,7 @@ public class Parser {
             SemanticRec mpwrite = new SemanticRec(RecordType.WRIT_STMT, TokenType.MP_WRITE.toString());
             writeParameter(mpwrite);
             writeParameterTail(mpwrite);
-            
+
             match(TokenType.MP_RPAREN);
             break;
         case MP_WRITELN: //111 WriteStatement -> mp_writeln mp_lparen WriteParameter WriteParameterTail mp_rparen.
@@ -1578,7 +1586,7 @@ public class Parser {
      */
     public void writeParameterTail(SemanticRec writeStmt)
     {
-        
+
         debug();
         switch (lookAhead.getType())
         {
@@ -1598,7 +1606,7 @@ public class Parser {
     }
 
     /**
-     *  
+     * 
      * @param writeStmt {@link RecordType#WRITE_STMT}
      */
     public void writeParameter(SemanticRec writeStmt)
@@ -1663,7 +1671,7 @@ public class Parser {
             }
         }
 
-            break;
+        break;
         default:
             syntaxError("identifier");
         }

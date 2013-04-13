@@ -4,18 +4,17 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
 import java.util.Stack;
 
 import compiler.TokenType;
 import compiler.parser.Parser;
+import compiler.parser.RecordType;
 import compiler.parser.SemanticRec;
 import compiler.parser.symbol.Classification;
 import compiler.parser.symbol.DataRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
-import compiler.parser.RecordType;
 
 public class Analyzer {
     Stack<SymbolTable> symboltables;
@@ -297,32 +296,49 @@ public class Analyzer {
     {
         out.println("wrts");
     }
-    
+
     private void writelnStack()
     {
         out.println("wrtlns");
     }
-    
+
     private void readI(String offset)
     {
         out.println("rd " + offset);
     }
-    
+
     private void readF(String offset)
     {
         out.println("rdf " + offset);
     }
-    
+
     private void readS(String offset)
     {
         out.println("rds " + offset);
     }
+
     /**
      * Halts program execution
      */
     private void halt()
     {
         out.println("hlt");
+    }
+
+    private void label(String label) {
+        out.println(label + ":");
+    }
+
+    private void branchTrue(String label) {
+        out.println("brts " + label);
+    }
+
+    private void branchFalse(String label) {
+        out.println("brfs " + label);
+    }
+
+    private void branchUnconditional(String label) {
+        out.println("br " + label);
     }
 
     /**
@@ -408,7 +424,7 @@ public class Analyzer {
             push("#\"" + lexeme + "\"");
             break;
         case BOOLEAN:
-            if(lexeme.equalsIgnoreCase("true"))
+            if (lexeme.equalsIgnoreCase("true"))
             {
                 push("#1");
             }
@@ -835,7 +851,7 @@ public class Analyzer {
     public void gen_writeStmt(SemanticRec writeStmt, SemanticRec exp)
     {
         String writeType = writeStmt.getDatum(0);
-        if(writeType.equalsIgnoreCase(TokenType.MP_WRITE.toString()))
+        if (writeType.equalsIgnoreCase(TokenType.MP_WRITE.toString()))
         {
             writeStack();
         }
@@ -844,15 +860,15 @@ public class Analyzer {
             writelnStack();
         }
     }
-    
+
     public void gen_readStmt(SemanticRec readStmt)
     {
         DataRow row = (DataRow) getIdRowFromSR(readStmt);
         Type type = row.getType();
         SymbolTable table = findSymbolTable(row);
         String offset = generateOffset(table, row);
-        
-        switch(type)
+
+        switch (type)
         {
         case INTEGER:
             readI(offset);
@@ -866,9 +882,63 @@ public class Analyzer {
         default:
             Parser.semanticError("Cannot read from console into variable of type: " + type.toString());
         }
-        
+
     }
-    
+
+    /**
+     * Generates a label
+     * 
+     * @return SemanticRec with the label that was output
+     */
+    public SemanticRec gen_new_label() {
+        String label = LabelGenerator.getNextLabel();
+        SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
+        label(label);
+        return labelRec;
+    }
+
+    /**
+     * Generates a specific label
+     * 
+     * @param labelRec
+     *            the SemanticRec containing the label to create
+     * @return the SemanticRec containing the label that was created
+     */
+    public SemanticRec gen_specified_label(SemanticRec labelRec) {
+        switch (labelRec.getRecType()) {
+        case LABEL:
+            label(labelRec.getDatum(0));
+            break;
+        default:
+            Parser.semanticError("Cannot generate label with information of type: " + labelRec.getRecType());
+            break;
+        }
+        return labelRec;
+    }
+
+    /**
+     * Generates a branch if false instruction to jump to a new label
+     * 
+     * @return SemanticRec with the label that will be jumped to (which may or may not exist yet)
+     */
+    public SemanticRec gen_branch_false() {
+        String label = LabelGenerator.getNextLabel();
+        SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
+        branchFalse(label);
+        return labelRec;
+    }
+
+    public SemanticRec gen_unconditional_branch() {
+        String label = LabelGenerator.getNextLabel();
+        SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
+        branchUnconditional(label);
+        return labelRec;
+    }
+
+    public void gen_comment(String comment) {
+        comment(comment);
+    }
+
     public Row findSymbol(String lexeme) {
         for (int i = symboltables.size() - 1; i >= 0; i--) {
             SymbolTable st = symboltables.get(i);

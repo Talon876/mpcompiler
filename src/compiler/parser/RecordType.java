@@ -7,7 +7,7 @@ public enum RecordType {
      */
     IDENTIFIER,
     /**
-     * Data is (Type.Boolean, Type.String, Type.Integer, Type.Float) value on stack 
+     * Data is (Type.Boolean, Type.String, Type.Integer, Type.Float) value on stack
      */
     LITERAL,
     /**
@@ -33,5 +33,9 @@ public enum RecordType {
     /**
      * Data is TokenType.MP_WriteLN or TokenType.Write
      */
-    WRIT_STMT
+    WRIT_STMT,
+    /**
+     * Data is a label
+     */
+    LABEL
 }
