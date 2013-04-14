@@ -1,0 +1,18 @@
+program Repeats;
+  var i, j, w, h: Integer;
+  begin
+     i := 0;
+     Write('Enter a width: ');
+     Read(w);
+     Write('Enter a height: ');
+     Read(h);
+     repeat {height}
+        j := 0; {reset inner loop}
+        repeat {width}
+          write('X');
+          j := j + 1;
+        until (j >= w);
+       writeln('');
+       i := i + 1;
+     until (i >= h)
+   end.

@@ -348,7 +348,7 @@ public class Analyzer {
      */
     private void comment(String comment)
     {
-        out.println("; " + comment);
+        out.println("\t; " + comment);
     }
 
     /*
@@ -890,7 +890,7 @@ public class Analyzer {
      * 
      * @return SemanticRec with the label that was output
      */
-    public SemanticRec gen_new_label() {
+    public SemanticRec gen_label() {
         String label = LabelGenerator.getNextLabel();
         SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
         label(label);
@@ -928,6 +928,11 @@ public class Analyzer {
         return labelRec;
     }
 
+    /**
+     * Generates an unconditional branch to a new label
+     * 
+     * @return SemanticRec with the label that will be jumped to (which may or may not exist yet)
+     */
     public SemanticRec gen_unconditional_branch() {
         String label = LabelGenerator.getNextLabel();
         SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
@@ -935,6 +940,50 @@ public class Analyzer {
         return labelRec;
     }
 
+    /**
+     * Generates a branch if false instruction to jump to a specified label
+     * 
+     * @param labelRec
+     *            the SemanticRec containing the label to jump to
+     * @return the SemanticRec containing the label
+     */
+    public SemanticRec gen_branch_false_to(SemanticRec labelRec) {
+        switch (labelRec.getRecType()) {
+        case LABEL:
+            branchFalse(labelRec.getDatum(0));
+            break;
+        default:
+            Parser.semanticError("Cannot generate label with information of type: " + labelRec.getRecType());
+            break;
+        }
+        return labelRec;
+    }
+
+    /**
+     * Generates a branch if true instruction to jump to a specified label
+     * 
+     * @param labelRec
+     *            the SemanticRec containing the label to jump to
+     * @return the SemanticRec containing the label
+     */
+    public SemanticRec gen_branch_true_to(SemanticRec labelRec) {
+        switch (labelRec.getRecType()) {
+        case LABEL:
+            branchTrue(labelRec.getDatum(0));
+            break;
+        default:
+            Parser.semanticError("Cannot generate label with information of type: " + labelRec.getRecType());
+            break;
+        }
+        return labelRec;
+    }
+
+    /**
+     * Generates a comment in the VM file
+     * 
+     * @param comment
+     *            the comment
+     */
     public void gen_comment(String comment) {
         comment(comment);
     }

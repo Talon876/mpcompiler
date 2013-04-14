@@ -69,7 +69,6 @@ public class Parser {
     }
 
     public void syntaxError(String expectedToken) {
-        Thread.dumpStack();
         System.out.println("Syntax error found on line " + lookAhead.getLineNumber() + ", column "
                 + lookAhead.getColumnNumber() + ": expected one of the following tokens {" + expectedToken
                 + "}, but found '" + lookAhead.getLexeme() + "'");
@@ -512,9 +511,13 @@ public class Parser {
         case MP_REPEAT: //54 RepeatStatement -> mp_repeat StatementSequence mp_until BooleanExpression
             out.println("54");
             match(TokenType.MP_REPEAT);
+            analyzer.gen_comment("begin repeat");
+            SemanticRec repeatLabel = analyzer.gen_label();
             statementSequence();
             match(TokenType.MP_UNTIL);
             booleanExpression();
+            analyzer.gen_comment("evaluate boolean expression and jump to beginning of repeat if necessary");
+            analyzer.gen_branch_false_to(repeatLabel);
             break;
         default:
             syntaxError("repeat");

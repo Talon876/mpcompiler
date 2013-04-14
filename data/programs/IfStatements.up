@@ -1,0 +1,28 @@
+program IfStatements;
+  var a, b, c : integer;
+      correct : boolean;
+  begin
+     a := 1;
+     b := 2;
+     c := 3;
+     
+     if a > 1
+       then writeln('a = ', a)
+     else writeln('a was not > 1, a was: ', a);
+     
+     if false then writeln('this is true')
+     else begin
+        writeln('this is false');
+        if b > a then
+        begin
+            write('b = ', b, ', a = ');
+            writeln(a);
+            writeln('b is greater than a');
+        end
+        else
+        begin
+            writeln('this shouldn''t happen');
+        end;
+     end;
+     
+   end.
