@@ -532,9 +532,14 @@ public class Parser {
         case MP_WHILE: //55 WhileStatement -> mp_while BooleanExpression mp_do Statement
             out.println("55");
             match(TokenType.MP_WHILE);
+            analyzer.gen_comment("while");
+            SemanticRec whileLabel = analyzer.gen_label();
             booleanExpression();
+            SemanticRec endLabel = analyzer.gen_branch_false();
             match(TokenType.MP_DO);
             statement();
+            analyzer.gen_branch_unconditional_to(whileLabel);
+            analyzer.gen_specified_label(endLabel);
             break;
         default:
             syntaxError("while");

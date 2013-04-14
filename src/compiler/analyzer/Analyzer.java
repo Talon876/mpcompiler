@@ -979,6 +979,25 @@ public class Analyzer {
     }
 
     /**
+     * Generates an unconditional branch instruction to jump to a specified label
+     * 
+     * @param labelRec
+     *            the SemanticRec containing the label to jump to
+     * @return the SemanticRec containing the label
+     */
+    public SemanticRec gen_branch_unconditional_to(SemanticRec labelRec) {
+        switch (labelRec.getRecType()) {
+        case LABEL:
+            branchUnconditional(labelRec.getDatum(0));
+            break;
+        default:
+            Parser.semanticError("Cannot generate label with information of type: " + labelRec.getRecType());
+            break;
+        }
+        return labelRec;
+    }
+
+    /**
      * Generates a comment in the VM file
      * 
      * @param comment
