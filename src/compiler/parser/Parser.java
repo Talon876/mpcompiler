@@ -554,35 +554,55 @@ public class Parser {
         case MP_FOR: //56 ForStatement -> mp_for ControlVariable mp_assign InitialValue StepValue FinalValue mp_do Statement
             out.println("56");
             match(TokenType.MP_FOR);
-            controlVariable();
+
+            String controlIdentifier = controlVariable();
+
+            Row controlSymbol = analyzer.findSymbol(controlIdentifier);
+            SemanticRec controlId = new SemanticRec(RecordType.IDENTIFIER,
+                    controlSymbol.getClassification().toString(), controlIdentifier);
+            //TODO ensure proper casting and see if float for loops are valid
             match(TokenType.MP_ASSIGN);
-            initialValue();
-            stepValue();
-            finalValue();
+            SemanticRec exp = initialValue();
+            analyzer.gen_comment("assign control variable to initial value");
+            analyzer.gen_assign(controlId, exp);
+            SemanticRec forLabel = analyzer.gen_label();
+            analyzer.gen_push_variable(controlId);
+            SemanticRec forDirection = stepValue();
+            SemanticRec finalExpr = finalValue();
+            analyzer.gen_comment("compare controlvariable to finalvalue");
+            analyzer.gen_for_comparison(forDirection); //now there is a boolean on top of the stack
+            SemanticRec endForLabel = analyzer.gen_branch_false();
             match(TokenType.MP_DO);
             statement();
+            analyzer.gen_comment("increment/decrement control variable");
+            analyzer.gen_for_controller(controlId, forDirection);
+            analyzer.gen_branch_unconditional_to(forLabel);
+            analyzer.gen_specified_label(endForLabel);
             break;
         default:
             syntaxError("for");
         }
     }
 
-    public void controlVariable()
+    public String controlVariable()
     {
+        String id = "";
         debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //57 ControlVariable -> VariableIdentifier
             out.println("57");
-            variableIdentifier();
+            id = variableIdentifier();
             break;
         default:
             syntaxError("identifier");
         }
+        return id;
     }
 
-    public void initialValue()
+    public SemanticRec initialValue()
     {
+        SemanticRec expr = null;
         debug();
         switch (lookAhead.getType())
         {
@@ -597,32 +617,38 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //58 InitialValue -> OrdinalExpression
             out.println("58");
-            ordinalExpression();
+            expr = ordinalExpression();
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
+        return expr;
     }
 
-    public void stepValue()
+    public SemanticRec stepValue()
     {
+        SemanticRec forDirection = null;
         debug();
         switch (lookAhead.getType())
         {
         case MP_TO: //59 StepValue -> mp_to
             out.println("59");
             match(TokenType.MP_TO);
+            forDirection = new SemanticRec(RecordType.FOR_DIRECTION, TokenType.MP_TO.toString());
             break;
         case MP_DOWNTO: //60 StepValue -> mp_downto
             out.println("60");
             match(TokenType.MP_DOWNTO);
+            forDirection = new SemanticRec(RecordType.FOR_DIRECTION, TokenType.MP_DOWNTO.toString());
             break;
         default:
             syntaxError("to, downto");
         }
+        return forDirection;
     }
 
-    public void finalValue() {
+    public SemanticRec finalValue() {
+        SemanticRec expr = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
@@ -636,11 +662,12 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //61 FinalValue -> OrdinalExpression
             out.println("61");
-            ordinalExpression();
+            expr = ordinalExpression();
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
+        return expr;
     }
 
     public void procedureStatement() {
@@ -1590,7 +1617,8 @@ public class Parser {
 
     /**
      * 
-     * @param writeStmt {@link RecordType#WRITE_STMT}
+     * @param writeStmt
+     *            {@link RecordType#WRITE_STMT}
      */
     public void writeParameterTail(SemanticRec writeStmt)
     {
@@ -1615,7 +1643,8 @@ public class Parser {
 
     /**
      * 
-     * @param writeStmt {@link RecordType#WRITE_STMT}
+     * @param writeStmt
+     *            {@link RecordType#WRITE_STMT}
      */
     public void writeParameter(SemanticRec writeStmt)
     {

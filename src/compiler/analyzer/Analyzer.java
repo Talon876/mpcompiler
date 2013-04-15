@@ -1010,6 +1010,105 @@ public class Analyzer {
     }
 
     /**
+     * Generates a push instruction to push a variable on to the stack
+     * 
+     * @param variableRec
+     *            a SemanticRec containing the variable to push
+     */
+    public void gen_push_variable(SemanticRec variableRec) {
+        switch (variableRec.getRecType()) {
+        case IDENTIFIER:
+            if (variableRec.getDatum(0).equalsIgnoreCase(Classification.VARIABLE.toString())) {
+                DataRow var = (DataRow) findSymbol(variableRec.getDatum(1));
+                String memLoc = generateOffset(findSymbolTable(var), var);
+                push(memLoc);
+            } else {
+                Parser.semanticError("Cannot push non-variable on to the stack");
+            }
+            break;
+        default:
+            Parser.semanticError("Cannot push non-identifier");
+            break;
+        }
+    }
+
+    /**
+     * Generates instructions that compare the ControlVariable and FinalValue <br>
+     * 
+     * Pre-Condition: ControlVariable was pushed on the stack, followed by FinalValue
+     * 
+     * @param forDirection
+     */
+    public void gen_for_comparison(SemanticRec forDirection) {
+        switch (forDirection.getRecType()) {
+        case FOR_DIRECTION:
+            if (forDirection.getDatum(0).equalsIgnoreCase(TokenType.MP_TO.toString())) {
+                lessEqualI();
+            } else if (forDirection.getDatum(0).equalsIgnoreCase(TokenType.MP_DOWNTO.toString())) {
+                greaterEqualI();
+            } else {
+                Parser.semanticError("Invalid FOR_DIRECTION: " + forDirection.getDatum(0));
+            }
+            break;
+        default:
+            Parser.semanticError("Cannot use non FOR_DIRECTION record type: " + forDirection.getRecType());
+            break;
+        }
+    }
+
+    /**
+     * Generates code to increment or decrement a for loop ControlVariable
+     * 
+     * @param controllerRec
+     *            SemanticRec containing the control variable information
+     * @param forDirection
+     *            SemanticRec containing the for loop direction
+     */
+    public void gen_for_controller(SemanticRec controllerRec, SemanticRec forDirection) {
+        boolean increment = false;
+        //determine whether or not to increment or decrement
+        switch (forDirection.getRecType()) {
+        case FOR_DIRECTION:
+            if (forDirection.getDatum(0).equalsIgnoreCase(TokenType.MP_TO.toString())) {
+                increment = true;
+            } else if (forDirection.getDatum(0).equalsIgnoreCase(TokenType.MP_DOWNTO.toString())) {
+                increment = false;
+            } else {
+                Parser.semanticError("Invalid FOR_DIRECTION: " + forDirection.getDatum(0));
+            }
+            break;
+        default:
+            Parser.semanticError("Cannot use non FOR_DIRECTION record type: " + forDirection.getRecType());
+            break;
+        }
+
+        switch (controllerRec.getRecType()) {
+        case IDENTIFIER:
+            if (controllerRec.getDatum(0).equalsIgnoreCase(Classification.VARIABLE.toString())) {
+                DataRow var = (DataRow) findSymbol(controllerRec.getDatum(1));
+                String memLoc = generateOffset(findSymbolTable(var), var);
+                if (increment) {
+                    push(memLoc);
+                    push("#1");
+                    addStackI();
+                    pop(memLoc);
+                } else {
+                    push(memLoc);
+                    push("#1");
+                    subStackI();
+                    pop(memLoc);
+                }
+            } else {
+                Parser.semanticError("Cannot use non-variable as control variable");
+            }
+            break;
+        default:
+            Parser.semanticError("Cannot use non-identifier for control variable");
+            break;
+        }
+    }
+
+    /**
      * Generates a comment in the VM file
      * 
      * @param comment

@@ -2,7 +2,12 @@ program Program2;
     var I: Integer;
        N: Integer;
   begin
+     write('Loop how many times? ');
      Read(N);
-     for I := 1 to N do
-       Write(I);
+     for I := (1 + 1 + 1 - 2) to (N + 0 + 0 + 0) do
+       Writeln(I);
+     
+     for I := 10 downto 1 do
+        writeln(I);
+     
    end.

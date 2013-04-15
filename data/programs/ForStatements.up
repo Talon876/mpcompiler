@@ -1,0 +1,14 @@
+program ForStatements;
+    var i, j : integer;
+    
+  begin
+     for i := -50 to 50 do
+     begin
+       for j := 1 to 20 do
+         write('X');
+       
+       writeln('');
+     end;
+    
+     
+   end.

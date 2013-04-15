@@ -37,5 +37,6 @@ public enum RecordType {
     /**
      * Data is a label
      */
-    LABEL
+    LABEL,
+    FOR_DIRECTION
 }
