@@ -917,7 +917,7 @@ public class Analyzer {
     }
 
     /**
-     * Generates a branch if false instruction to jump to a new label
+     * Generates a branch if false instruction to jump to a newly generated label
      * 
      * @return SemanticRec with the label that will be jumped to (which may or may not exist yet)
      */
@@ -929,11 +929,23 @@ public class Analyzer {
     }
 
     /**
-     * Generates an unconditional branch to a new label
+     * Generates a branch if true instruction to jump to a newly generated label
      * 
      * @return SemanticRec with the label that will be jumped to (which may or may not exist yet)
      */
-    public SemanticRec gen_unconditional_branch() {
+    public SemanticRec gen_branch_true() {
+        String label = LabelGenerator.getNextLabel();
+        SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
+        branchTrue(label);
+        return labelRec;
+    }
+
+    /**
+     * Generates an unconditional branch to a newly generated label
+     * 
+     * @return SemanticRec with the label that will be jumped to (which may or may not exist yet)
+     */
+    public SemanticRec gen_branch_unconditional() {
         String label = LabelGenerator.getNextLabel();
         SemanticRec labelRec = new SemanticRec(RecordType.LABEL, label);
         branchUnconditional(label);

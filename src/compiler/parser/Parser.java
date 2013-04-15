@@ -469,7 +469,7 @@ public class Parser {
             SemanticRec elseLabel = analyzer.gen_branch_false(); //brfs to else statements
             statement();
             analyzer.gen_comment("skip else part");
-            SemanticRec endLabel = analyzer.gen_unconditional_branch(); //br to end of if
+            SemanticRec endLabel = analyzer.gen_branch_unconditional(); //br to end of if
             analyzer.gen_comment("else part");
             analyzer.gen_specified_label(elseLabel);
             optionalElsePart();
