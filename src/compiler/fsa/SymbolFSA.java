@@ -6,7 +6,7 @@ import compiler.io.MPFile;
 
 /**
  * Responsible for finding the following tokens: MP_PERIOD, MP_COMMA, MP_SCOLON, MP_LPAREN, MP_RPAREN, MP_EQUAL, MP_GTHAN, MP_GEQUAL,
- * MP_LTHAN, MP_LEQUAL, MP_NEQUAL, MP_ASSIGN, MP_PLUS, MP_MINUS, MP_TIMES, MP_COLON
+ * MP_LTHAN, MP_LEQUAL, MP_NEQUAL, MP_ASSIGN, MP_PLUS, MP_MINUS, MP_TIMES, MP_COLON, MP_DIV
  */
 public class SymbolFSA implements FSA {
 
@@ -62,6 +62,9 @@ public class SymbolFSA implements FSA {
                     case '>':
                         state = 16;
                         break;
+                    case '/':
+                        state = 19;
+                        break;
                     }
                     lexeme += current;
 
@@ -75,6 +78,7 @@ public class SymbolFSA implements FSA {
                 case 8:
                 case 9:
                 case 10:
+                case 19:
                     state = 18;
                     break;
                 case 11: //:
@@ -174,6 +178,9 @@ public class SymbolFSA implements FSA {
             break;
         case "*":
             type = TokenType.MP_TIMES;
+            break;
+        case "/":
+            type = TokenType.MP_DIV;
             break;
         case ":":
             type = TokenType.MP_COLON;

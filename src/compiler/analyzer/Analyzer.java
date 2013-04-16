@@ -536,56 +536,67 @@ public class Analyzer {
      */
     public SemanticRec gen_mulOp(SemanticRec left, SemanticRec mulOp, SemanticRec right)
     {
-
-        SemanticRec[] results = gen_cast(left, right); //generates casting operations if needed
-        Type resultType = getTypeFromSR(results[0]); //the types are equal at this point
+        SemanticRec[] results;
+        Type resultType;
         String op = mulOp.getDatum(0);
-        switch (resultType)
+        if (op.equalsIgnoreCase("MP_DIV_INT"))
         {
-        case INTEGER:
-            switch (op)
+            checkTypesInt(left, right); //both types must be integers
+            divStackI();
+            resultType = Type.INTEGER;
+        }
+        else if (op.equalsIgnoreCase("MP_DIV"))
+        {
+            results = gen_cast_division(left, right); //always casts to float if not float
+            resultType = getTypeFromSR(results[0]); //the types are equal at this point
+            divStackF();
+        }
+        else
+        {
+            results = gen_cast(left, right); //generates casting operations if needed
+            resultType = getTypeFromSR(results[0]); //the types are equal at this point
+            switch (resultType)
             {
-            case "MP_MOD":
-                modStackI();
+
+            case INTEGER:
+                switch (op)
+                {
+                case "MP_MOD":
+                    modStackI();
+                    break;
+                case "MP_TIMES":
+                    mulStackI();
+                    break;
+                default:
+                    Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
+                }
                 break;
-            case "MP_DIV":
-                divStackI();
+            case FLOAT:
+                switch (op)
+                {
+                case "MP_MOD":
+                    modStackF();
+                    break;
+                case "MP_TIMES":
+                    mulStackF();
+                    break;
+                default:
+                    Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
+                }
                 break;
-            case "MP_TIMES":
-                mulStackI();
+            case BOOLEAN:
+                switch (op)
+                {
+                case "MP_AND":
+                    and();
+                    break;
+                default:
+                    Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
+                }
                 break;
             default:
-                Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
+                Parser.semanticError(resultType + "does not have a multiplication operation");
             }
-            break;
-        case FLOAT:
-            switch (op)
-            {
-            case "MP_MOD":
-                modStackF();
-                break;
-            case "MP_DIV":
-                divStackF();
-                break;
-            case "MP_TIMES":
-                mulStackF();
-                break;
-            default:
-                Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
-            }
-            break;
-        case BOOLEAN:
-            switch (op)
-            {
-            case "MP_AND":
-                and();
-                break;
-            default:
-                Parser.semanticError(op + " is not a multiplication operator for type " + resultType);
-            }
-            break;
-        default:
-            Parser.semanticError(resultType + "does not have a multiplication operation");
         }
         return new SemanticRec(RecordType.LITERAL, resultType.toString());
     }
@@ -680,6 +691,30 @@ public class Analyzer {
     }
 
     /**
+     * Only allows you to assign to integer identifiers
+     * per http://www.freepascal.org/docs-html/ref/refsu52.html#x145-15500013.2.4
+     * "The control variable must be an ordinal type, no other types can be used as counters in a loop."
+     * @param id
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#variableIdentifier()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     * @param exp
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with {@link RecordType#LITERAL} or
+     *            {@link RecordType#IDENTIFIER}
+     */
+    public void gen_assign_for(SemanticRec id, SemanticRec exp)
+    {
+        Type idType = getTypeFromSR(id);
+        if(idType == Type.INTEGER)
+        {
+            gen_assign(id, exp);
+        }
+        else
+        {
+            Parser.semanticError("The for loop's control variable must be type Integer");
+        }
+    }
+    
+    /**
      * 
      * @param left
      *            {@link SemanticRec} from {@link compiler.parser.Parser#simpleExpression()} with {@link RecordType#LITERAL} or
@@ -757,7 +792,7 @@ public class Analyzer {
 
     /**
      * Casts Ids or Literals to the less restrictive type to preserve precision Int, Float the Int is cast to a Float
-     * 
+     * Based on http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
      * @param left
      *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
      * @param right
@@ -809,10 +844,82 @@ public class Analyzer {
     }
 
     /**
+     * Casts Ids or Literals to floats as the MP_DIV operator always returns a float result per
+     * http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
      * 
-     * @param leftType
+     * @param left
+     *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
+     * @param right
+     *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
+     * @return resulting SemanticRec idx 0 is left idx 1 is right will be float for both
+     */
+    public SemanticRec[] gen_cast_division(SemanticRec left, SemanticRec right)
+    {
+        Type leftType = getTypeFromSR(left);
+        Type rightType = getTypeFromSR(right);
+
+        SemanticRec[] arrRec = new SemanticRec[2];
+        boolean properCast = false;
+
+        if (leftType == Type.FLOAT)
+        {
+            //no cast needed
+            arrRec[0] = left;
+            properCast = true;
+        }
+        else if (leftType == Type.INTEGER)
+        {
+            //cast left to float
+            /*
+             * The following cast works because of the way the stack in the VM is initialized
+             * when the stack pointer is moved back the value that use to be on top is not lost just not currently in "scope"
+             * once the cast happens on the new "top" the pointer is moved back and it was like nothing happened to the value
+             */
+            comment("start cast left to float");
+            sub("SP", "#1", "SP"); //move to the left var on the stack
+            castStackToF();
+            add("SP", "#1", "SP"); //move back to original place
+            comment("end cast left to float");
+            arrRec[0] = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
+            properCast = true;
+        }
+        else
+        {
+            properCast = false; //left not an Int or Float
+        }
+
+        if (rightType == Type.FLOAT)
+        {
+            //no cast needed
+            arrRec[1] = right;
+            properCast = true;
+        }
+        else if (rightType == Type.INTEGER)
+        {
+            //cast right to float
+            castStackToF(); //top value
+            arrRec[1] = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
+            properCast = true;
+        }
+        else
+        {
+            properCast = false; //Right type was not an integer or float
+        }
+
+        if (!properCast)
+        {
+            //invalid cast
+            Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
+            return null;
+        }
+        return arrRec;
+    }
+
+    /**
+     * Always casts to the left's Type
+     * @param left
      *            {@link RecordType#IDENTIFIER}
-     * @param rightType
+     * @param right
      *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
      * @return expression's resulting SemanticRec if it is a {@link RecordType#LITERAL}
      */
@@ -846,6 +953,27 @@ public class Analyzer {
         }
 
         return returnRec;
+    }
+
+    /**
+     * Checks that both left and right are ints "div" division is only on integer types
+     * http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
+     * 
+     * @param left
+     *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
+     * @param right
+     *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
+     * 
+     */
+    private void checkTypesInt(SemanticRec left, SemanticRec right)
+    {
+        Type leftType = getTypeFromSR(left);
+        Type rightType = getTypeFromSR(right);
+
+        if(leftType != Type.INTEGER || rightType != Type.INTEGER)
+        {
+            Parser.semanticError("div operator only works on integer operands left operand is type: " + leftType + " right operand is type: " + rightType);
+        }
     }
 
     public void gen_writeStmt(SemanticRec writeStmt, SemanticRec exp)

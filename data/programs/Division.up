@@ -1,0 +1,20 @@
+program Division;
+  var a, b, c : integer;
+  d,e,f : float;
+  begin
+     a := 1;
+     b := 0;
+     c := 3;
+     d := 4.5E0;
+     e := 1.5E0;
+     f := 0;
+     
+     f := a div c; 
+     Write('f = ', f, '\n'); {returns 0 integer division}
+     {f := a div e; {semantic error e is a float}}
+     f := c / e; 
+     Write('f = ', f, '\n'); { returns 2 float division}
+     b := d / a; 
+     Write('b = ', b, '\n'); { returns 4 float division cast to int}
+     
+  end.

@@ -44,7 +44,7 @@ public class ReservedWords {
         
         tokenMap.put("and", TokenType.MP_AND);
         tokenMap.put("begin", TokenType.MP_BEGIN);
-        tokenMap.put("div", TokenType.MP_DIV);
+        tokenMap.put("div", TokenType.MP_DIV_INT);
         tokenMap.put("do", TokenType.MP_DO);
         tokenMap.put("downto", TokenType.MP_DOWNTO);
         tokenMap.put("else", TokenType.MP_ELSE);

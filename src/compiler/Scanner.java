@@ -209,6 +209,7 @@ public class Scanner {
             case '+':
             case '-':
             case '*':
+            case '/': //added for div vs / division
             case ':':
                 tokenFinder = new SymbolFSA();
                 break;

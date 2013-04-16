@@ -564,11 +564,12 @@ public class Parser {
             match(TokenType.MP_ASSIGN);
             SemanticRec exp = initialValue();
             analyzer.gen_comment("assign control variable to initial value");
-            analyzer.gen_assign(controlId, exp);
+            analyzer.gen_assign_for(controlId, exp); //checks that the variableIdentifier is type Integer, casts the initial variable if needed
             SemanticRec forLabel = analyzer.gen_label();
             analyzer.gen_push_variable(controlId);
             SemanticRec forDirection = stepValue();
             SemanticRec finalExpr = finalValue();
+            analyzer.gen_assign_cast(controlId, finalExpr); //casts finalExpr to Integer if needed
             analyzer.gen_comment("compare controlvariable to finalvalue");
             analyzer.gen_for_comparison(forDirection); //now there is a boolean on top of the stack
             SemanticRec endForLabel = analyzer.gen_branch_false();
@@ -691,6 +692,7 @@ public class Parser {
         case MP_AND:
         case MP_MOD:
         case MP_DIV:
+        case MP_DIV_INT: //added for / vs div division
         case MP_TIMES:
         case MP_OR:
         case MP_MINUS:
@@ -720,7 +722,7 @@ public class Parser {
             match(TokenType.MP_RPAREN);
             break;
         default:
-            syntaxError("',', ), and, mod, div, *, 'or', -, +, <>, >=, <=, <, >, =, downto, to, do, until, else, then, ;, end");
+            syntaxError("',', ), and, mod, div, / , *, 'or', -, +, <>, >=, <=, <, >, =, downto, to, do, until, else, then, ;, end");
         }
     }
 
@@ -1116,6 +1118,7 @@ public class Parser {
         case MP_AND:
         case MP_MOD:
         case MP_DIV:
+        case MP_DIV_INT: //added for / vs div division
         case MP_TIMES: //87 FactorTail -> MultiplyingOperator Factor FactorTail
             out.println("87");
             mulOp = multiplyingOperator();
@@ -1129,7 +1132,7 @@ public class Parser {
             }
             break;
         default:
-            syntaxError("',', ), or, -, +, <>, >=, <=, >, <, =, downto, to, do, until, else, then, ;, end, and, mod, div, *");
+            syntaxError("',', ), or, -, +, <>, >=, <=, >, <, =, downto, to, do, until, else, then, ;, end, and, mod, div, / , *");
         }
         return ft;
     }
@@ -1153,10 +1156,15 @@ public class Parser {
             match(TokenType.MP_MOD);
             mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_MOD.toString());
             break;
-        case MP_DIV: //90 MultiplyingOperator -> mp_div
-            out.println("90");
+        case MP_DIV: //112 MultiplyingOperator -> mp_div "/"
+            out.println("112");
             match(TokenType.MP_DIV);
             mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_DIV.toString());
+            break;
+        case MP_DIV_INT: //90 MultiplyingOperator -> mp_div_int "div"
+            out.println("90");
+            match(TokenType.MP_DIV_INT);
+            mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_DIV_INT.toString());
             break;
         case MP_TIMES: //89 MultiplyingOperator -> mp_times
             out.println("89");
@@ -1164,7 +1172,7 @@ public class Parser {
             mulOp = new SemanticRec(RecordType.MUL_OP, TokenType.MP_TIMES.toString());
             break;
         default:
-            syntaxError("and, mod, div, *");
+            syntaxError("and, mod, div, / , *");
         }
         return mulOp;
     }

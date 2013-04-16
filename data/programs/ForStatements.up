@@ -1,6 +1,6 @@
 program ForStatements;
     var i, j : integer;
-    
+    k: float;
   begin
      for i := -50 to 50 do
      begin
@@ -10,5 +10,19 @@ program ForStatements;
        writeln('');
      end;
     
+    for i := -50 to 50.1E0 do
+     begin
+       for j := 1 to 20.1E0 do
+         write('X');
+       
+       writeln('');
+     end;
      
+     {for i := -50 to 50.1E0 do
+     begin
+       for k := 1.1E0 to 20.1E0 do
+         write('X');
+       
+       writeln('');
+     end; semantic error because k is type float not ordinal type integer}
    end.

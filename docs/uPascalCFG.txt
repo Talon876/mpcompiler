@@ -87,7 +87,7 @@ Term -> Factor FactorTail.
 FactorTail -> MultiplyingOperator Factor FactorTail
 | .
 MultiplyingOperator -> mp_times
-| mp_div
+| mp_div_int
 | mp_mod
 | mp_and.
 Factor -> mp_integer_lit
@@ -109,7 +109,7 @@ Type -> mp_float
 | mp_string
 | mp_boolean.
 WriteStatement -> mp_writeln mp_lparen WriteParameter WriteParameterTail mp_rparen.
-
+MultiplyingOperator -> mp_div.
 Factor -> mp_float_lit
 | mp_string_lit
 | mp_true
