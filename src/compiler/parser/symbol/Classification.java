@@ -4,5 +4,8 @@ public enum Classification {
     VARIABLE,
     PARAMETER,
     FUNCTION,
-    PROCEDURE
+    PROCEDURE,
+    DISREG,
+    RETADDR,
+    FUNCVALUE
 }

@@ -116,10 +116,10 @@ public class SymbolTable implements Printable {
             Attribute attribute = attributes.get(i);
             switch (c) {
             case VARIABLE:
-                DataRow v = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
-                insertRow(v);
-                break;
             case PARAMETER:
+            case DISREG:
+            case RETADDR:
+            case FUNCVALUE:
                 DataRow p = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
                 insertRow(p);
                 break;
@@ -139,6 +139,15 @@ public class SymbolTable implements Printable {
         addDataSymbolsToTable(c, ids, attributes);
     }
 
+    public void addDataSymbolToTable(Classification c, String id, Attribute attribute)
+    {
+        List<String> ids = new ArrayList<String>();
+        ids.add(id);
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        attributes.add(attribute);
+        addDataSymbolsToTable(c, ids, attributes);
+    }
+    
     public void addModuleSymbolsToTable(Classification c, String lexeme, Type returnType, List<Attribute> attributes, String branchLabel) {
         switch (c) {
         case FUNCTION:

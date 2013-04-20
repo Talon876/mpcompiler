@@ -169,8 +169,10 @@ public class Parser {
             String branch = LabelGenerator.getNextLabel();
             SemanticRec rec = new SemanticRec(RecordType.LABEL, branch);
             addSymbolTable(scopeName, branch);
+            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value", new Attribute(Type.STRING, Mode.VALUE));
             match(TokenType.MP_SCOLON);
             analyzer.gen_branch_unconditional_to(rec); //after the activation record branch to where the begin block starts
+            
             block(scopeName, new SemanticRec(RecordType.BLOCK, "program"), rec); //sends in the branch lbl and that it is a program block type
 
             match(TokenType.MP_PERIOD);
@@ -326,17 +328,15 @@ public class Parser {
     public void procedureAndFunctionDeclarationPart()
     {
         debug();
-        String branchLbl = LabelGenerator.getNextLabel();
-        SemanticRec lbl = new SemanticRec(RecordType.LABEL, branchLbl);
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //10 ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
             out.println("10");
-            procedureDeclaration(lbl);
+            procedureDeclaration();
             procedureAndFunctionDeclarationPart();
             break;
         case MP_FUNCTION: //11 ProcedureAndFunctionDeclarationPart -> FunctionDeclaration ProcedureAndFunctionDeclarationPart
             out.println("11");
-            functionDeclaration(lbl);
+            functionDeclaration();
             procedureAndFunctionDeclarationPart();
             break;
         case MP_BEGIN: //12 ProcedureAndFunctionDeclarationPart -> lambda
@@ -348,8 +348,10 @@ public class Parser {
         }
     }
 
-    public void procedureDeclaration(SemanticRec branchLbl)
+    public void procedureDeclaration()
     {
+        String lbl = LabelGenerator.getNextLabel();
+        SemanticRec branchLbl = new SemanticRec(RecordType.LABEL, lbl);
         debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //13 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
@@ -372,8 +374,10 @@ public class Parser {
         }
     }
 
-    public void functionDeclaration(SemanticRec branchLbl)
+    public void functionDeclaration()
     {
+        String lbl = LabelGenerator.getNextLabel();
+        SemanticRec branchLbl = new SemanticRec(RecordType.LABEL, lbl);
         debug();
         switch (lookAhead.getType()) {
         case MP_FUNCTION: //14 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
@@ -418,7 +422,9 @@ public class Parser {
             symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes,
                     branchLbl.getDatum(0));
             addSymbolTable(procId, branchLbl.getDatum(0));
+            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value", new Attribute(Type.STRING, Mode.VALUE));
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
+            symboltables.peek().addDataSymbolToTable(Classification.RETADDR, "Caller's Return Address", new Attribute(Type.STRING, Mode.VALUE));
             break;
         default:
             syntaxError("procedure");
@@ -451,7 +457,10 @@ public class Parser {
             symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes,
                     branchLbl.getDatum(0));
             addSymbolTable(funcId, branchLbl.getDatum(0));
+            symboltables.peek().addDataSymbolToTable(Classification.FUNCVALUE, "Function Return Value", new Attribute(t, Mode.VARIABLE));
+            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value", new Attribute(Type.STRING, Mode.VALUE));
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
+            symboltables.peek().addDataSymbolToTable(Classification.RETADDR, "Return Address", new Attribute(Type.STRING, Mode.VALUE));
             break;
         default:
             syntaxError("function");
