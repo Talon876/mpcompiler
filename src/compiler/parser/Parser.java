@@ -170,6 +170,7 @@ public class Parser {
             SemanticRec rec = new SemanticRec(RecordType.LABEL, branch);
             addSymbolTable(scopeName, branch);
             match(TokenType.MP_SCOLON);
+            analyzer.gen_branch_unconditional_to(rec); //after the activation record branch to where the begin block starts
             block(scopeName, new SemanticRec(RecordType.BLOCK, "program"), rec); //sends in the branch lbl and that it is a program block type
 
             match(TokenType.MP_PERIOD);
@@ -214,19 +215,14 @@ public class Parser {
         case MP_VAR: //4 Block -> VariableDeclarationPart ProcedureAndFunctionDeclarationPart StatementPart
             out.println("4");
             variableDeclarationPart();
-            if (blockType.getRecType() == RecordType.BLOCK && !blockType.getDatum(0).equalsIgnoreCase("program"))
-            { //for procedure/function blocks it needs to be able to skip around any procedure/function declarations
-                analyzer.gen_specified_label(branchLbl); //places the label that is in the symbol table
-                branchLbl = new SemanticRec(RecordType.LABEL, LabelGenerator.getNextLabel()); //generates an intermediate label to skip over declarations
-
-            }
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, scopeName, ""
                     + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
+            
+            procedureAndFunctionDeclarationPart();
+            analyzer.gen_specified_label(branchLbl); //place the label at the begin block
             //#gen_activation_rec(name_rec)
             analyzer.gen_activation_rec(name_rec);
-            analyzer.gen_branch_unconditional_to(branchLbl); //after the activation record branch to where the begin block starts
-            procedureAndFunctionDeclarationPart();
-            statementPart(branchLbl); //send it the label that will be placed at the begin block
+            statementPart();
             break;
         default:
             syntaxError("var, begin, function, procedure");
@@ -1437,14 +1433,13 @@ public class Parser {
         return parameters;
     }
 
-    public void statementPart(SemanticRec branchLbl)
+    public void statementPart()
     {
         debug();
         switch (lookAhead.getType())
         {
         case MP_BEGIN: //25 StatementPart -> CompoundStatement
             out.println("25");
-            analyzer.gen_specified_label(branchLbl); //place the label at the begin block
             compoundStatement();
             break;
         default:
