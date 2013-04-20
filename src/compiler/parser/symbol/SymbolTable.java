@@ -13,12 +13,14 @@ public class SymbolTable implements Printable {
     private ArrayList<Row> rows;
     private int nestingLevel;
     private AtomicInteger memSize;
+    private String branchLbl;
 
-    public SymbolTable(String scopeName) {
+    public SymbolTable(String scopeName, String branch) {
         this.scopeName = scopeName;
         rows = new ArrayList<Row>();
         memSize = new AtomicInteger();
         nestingLevel = getAndIncrementNestingLevel();
+        branchLbl = branch;
     }
 
     public static int getAndIncrementNestingLevel()
@@ -92,11 +94,15 @@ public class SymbolTable implements Printable {
         return false;
     }
 
+    public String getBranchLbl() {
+        return branchLbl;
+    }
+
     @Override
     public void print()
     {
-        System.out.println("SymbolTable Name: " + scopeName + "\t Nesting Level: " + nestingLevel + "\t Size: "
-                + getTableSize());
+        System.out.println("SymbolTable Name: " + scopeName + "\t Nesting Level: " + nestingLevel + "\tBranch Label: "
+                + getBranchLbl() + "\t Size: " + getTableSize());
         for (Row r : rows)
         {
             System.out.print("\tRow ");
@@ -133,14 +139,14 @@ public class SymbolTable implements Printable {
         addDataSymbolsToTable(c, ids, attributes);
     }
 
-    public void addModuleSymbolsToTable(Classification c, String lexeme, Type returnType, List<Attribute> attributes) {
+    public void addModuleSymbolsToTable(Classification c, String lexeme, Type returnType, List<Attribute> attributes, String branchLabel) {
         switch (c) {
         case FUNCTION:
-            FunctionRow f = new FunctionRow(lexeme, c, returnType, attributes);
+            FunctionRow f = new FunctionRow(lexeme, c, returnType, attributes, branchLabel);
             insertRow(f);
             break;
         case PROCEDURE:
-            ProcedureRow proc = new ProcedureRow(lexeme, c, attributes);
+            ProcedureRow proc = new ProcedureRow(lexeme, c, attributes, branchLabel);
             insertRow(proc);
             break;
         default:

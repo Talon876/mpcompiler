@@ -12,6 +12,7 @@ import compiler.Scanner;
 import compiler.Token;
 import compiler.TokenType;
 import compiler.analyzer.Analyzer;
+import compiler.analyzer.LabelGenerator;
 import compiler.parser.symbol.Attribute;
 import compiler.parser.symbol.Classification;
 import compiler.parser.symbol.Mode;
@@ -87,7 +88,7 @@ public class Parser {
         System.exit(1);
     }
 
-    private boolean addSymbolTable(String scopeName)
+    private boolean addSymbolTable(String scopeName, String branchLbl)
     {
         boolean exists = false;
         for (SymbolTable t : symboltables)
@@ -100,7 +101,7 @@ public class Parser {
         }
         if (!exists)
         {
-            symboltables.push(new SymbolTable(scopeName));
+            symboltables.push(new SymbolTable(scopeName, branchLbl));
             return true;
         }
         else
@@ -165,7 +166,7 @@ public class Parser {
         case MP_PROGRAM: //2 Program -> Programheading #create_symbol_table(program_identifier_rec) mp_scolon Block mp_period
             out.println("2");
             String scopeName = programHeading();
-            addSymbolTable(scopeName);
+            addSymbolTable(scopeName, LabelGenerator.getNextLabel());
             match(TokenType.MP_SCOLON);
             block(scopeName);
 
@@ -322,15 +323,16 @@ public class Parser {
     public void procedureAndFunctionDeclarationPart()
     {
         debug();
+        String branchLbl = LabelGenerator.getNextLabel();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //10 ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
             out.println("10");
-            procedureDeclaration();
+            procedureDeclaration(branchLbl);
             procedureAndFunctionDeclarationPart();
             break;
         case MP_FUNCTION: //11 ProcedureAndFunctionDeclarationPart -> FunctionDeclaration ProcedureAndFunctionDeclarationPart
             out.println("11");
-            functionDeclaration();
+            functionDeclaration(branchLbl);
             procedureAndFunctionDeclarationPart();
             break;
         case MP_BEGIN: //12 ProcedureAndFunctionDeclarationPart -> lambda
@@ -342,13 +344,13 @@ public class Parser {
         }
     }
 
-    public void procedureDeclaration()
+    public void procedureDeclaration(String branchLbl)
     {
         debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //13 ProcedureDeclaration -> ProcedureHeading mp_scolon Block mp_scolon #destroy
             out.println("13");
-            String procId = procedureHeading();
+            String procId = procedureHeading(branchLbl);
             match(TokenType.MP_SCOLON);
             block(procId);
             match(TokenType.MP_SCOLON);
@@ -366,13 +368,13 @@ public class Parser {
         }
     }
 
-    public void functionDeclaration()
+    public void functionDeclaration(String branchLbl)
     {
         debug();
         switch (lookAhead.getType()) {
         case MP_FUNCTION: //14 FunctionDeclaration -> FunctionHeading mp_scolon Block mp_scolon #Destroy
             out.println("14");
-            String funcId = functionHeading();
+            String funcId = functionHeading(branchLbl);
             match(TokenType.MP_SCOLON);
             block(funcId);
             match(TokenType.MP_SCOLON);
@@ -390,7 +392,7 @@ public class Parser {
         }
     }
 
-    public String procedureHeading()
+    public String procedureHeading(String branchLbl)
     {
         String procId = null;
         List<ParamSR> parameters;
@@ -409,8 +411,8 @@ public class Parser {
                 attributes.add(param.getAttribute());
                 ids.add(param.getLexeme());
             }
-            symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes);
-            addSymbolTable(procId);
+            symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes, branchLbl);
+            addSymbolTable(procId, branchLbl);
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
             break;
         default:
@@ -419,7 +421,7 @@ public class Parser {
         return procId;
     }
 
-    public String functionHeading()
+    public String functionHeading(String branchLbl)
     {
         String funcId = null;
         List<ParamSR> parameters;
@@ -440,8 +442,9 @@ public class Parser {
             }
             match(TokenType.MP_COLON);
             Type t = type();
-            symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes);
-            addSymbolTable(funcId);
+            
+            symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes, branchLbl);
+            addSymbolTable(funcId, branchLbl);
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
             break;
         default:

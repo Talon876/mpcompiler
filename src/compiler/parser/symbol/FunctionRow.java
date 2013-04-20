@@ -6,12 +6,19 @@ import java.util.List;
 public class FunctionRow extends Row implements ModuleRow {
 
     private List<Attribute> attributes;
-
-    public FunctionRow(String lexeme, Classification classification, Type returnType, List<Attribute> attributes) {
+    private String branchLbl;
+    
+    public FunctionRow(String lexeme, Classification classification, Type returnType, List<Attribute> attributes, String branchLbl) {
         super(lexeme, classification);
         setType(returnType);
         this.attributes = new ArrayList<Attribute>();
         this.attributes.addAll(attributes);
+        this.branchLbl = branchLbl;
+    }
+
+    @Override
+    public String getBranchLabel() {
+        return branchLbl;
     }
 
     public void addAttribute(Attribute attribute) {
@@ -33,7 +40,7 @@ public class FunctionRow extends Row implements ModuleRow {
 
     @Override
     public void print() {
-        System.out.print("Function: " + getLexeme() + "\tformal attributes: {");
+        System.out.print("Function: " + getLexeme() + "\tBranch Label: " + getBranchLabel() + "\tformal attributes: {");
         boolean first = true;
         for (Attribute a : attributes)
         {
