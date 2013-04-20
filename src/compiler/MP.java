@@ -14,27 +14,14 @@ public class MP {
         } else {
             String filename = args[0];
 
-            if (filename.endsWith(".up")) {
+            if (filename.endsWith(".up") || filename.endsWith(".pas")) {
                 System.out.println("Compiling: " + filename);
-
-                Scanner s = new Scanner();
-                s.openFile(filename);
-
-                Parser p = new Parser(s, filename + ".vm");
-
-                //                ArrayList<Token> tokens = s.getTokens();
-                //                //print tokens to token file
-                //                for (Token t : tokens) {
-                //
-                //                    System.out.println(t.toString());
-                //
-                //                }
-
             } else {
-                System.out.println("Usage: java MP <filename.up>");
+                System.out.println("Warning: Expected filetype to be .up or .pas, attempting to compile anyway.");
             }
+            Scanner s = new Scanner();
+            s.openFile(filename);
+            Parser p = new Parser(s, filename + ".vm");
         }
-
     }
-
 }
