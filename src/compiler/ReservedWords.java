@@ -3,8 +3,11 @@ package compiler;
 import java.util.HashMap;
 
 public class ReservedWords {
-    
-    static HashMap<String, TokenType> tokenMap = new HashMap<String, TokenType>();
+
+    private ReservedWords() { //uninstantiable utility class
+    }
+
+    private static HashMap<String, TokenType> tokenMap = new HashMap<String, TokenType>();
 
     static {
         //add all reserved words in all lowercase
