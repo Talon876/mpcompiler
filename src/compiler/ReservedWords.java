@@ -1,47 +1,14 @@
 package compiler;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ReservedWords {
-
-    static ArrayList<String> reservedWords = new ArrayList<String>();
+    
     static HashMap<String, TokenType> tokenMap = new HashMap<String, TokenType>();
 
     static {
         //add all reserved words in all lowercase
-        reservedWords.add("and");
-        reservedWords.add("begin");
-        reservedWords.add("div");
-        reservedWords.add("do");
-        reservedWords.add("downto");
-        reservedWords.add("else");
-        reservedWords.add("end");
-        reservedWords.add("fixed");
-        reservedWords.add("float");
-        reservedWords.add("for");
-        reservedWords.add("function");
-        reservedWords.add("if");
-        reservedWords.add("integer");
-        reservedWords.add("mod");
-        reservedWords.add("not");
-        reservedWords.add("or");
-        reservedWords.add("procedure");
-        reservedWords.add("program");
-        reservedWords.add("read");
-        reservedWords.add("repeat");
-        reservedWords.add("then");
-        reservedWords.add("to");
-        reservedWords.add("until");
-        reservedWords.add("var");
-        reservedWords.add("while");
-        reservedWords.add("write");
-        reservedWords.add("writeln");
-        reservedWords.add("true");
-        reservedWords.add("false");
-        reservedWords.add("boolean");
-        reservedWords.add("string");
-        
+
         tokenMap.put("and", TokenType.MP_AND);
         tokenMap.put("begin", TokenType.MP_BEGIN);
         tokenMap.put("div", TokenType.MP_DIV_INT);
@@ -73,7 +40,6 @@ public class ReservedWords {
         tokenMap.put("false", TokenType.MP_FALSE);
         tokenMap.put("boolean", TokenType.MP_BOOLEAN);
         tokenMap.put("string", TokenType.MP_STRING);
-
     }
 
     /**
@@ -84,7 +50,7 @@ public class ReservedWords {
      * @return true if the word is a reserved word, false otherwise
      */
     public static boolean isReserved(String lexeme) {
-        return reservedWords.contains(lexeme.toLowerCase());
+        return tokenMap.keySet().contains(lexeme.toLowerCase());
     }
 
     /**
