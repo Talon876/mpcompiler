@@ -38,5 +38,11 @@ public enum RecordType {
      * Data is a label
      */
     LABEL,
-    FOR_DIRECTION
+    
+    FOR_DIRECTION,
+    
+    /**
+     * Data is ("function", "procedure", "program")
+     */
+    BLOCK
 }

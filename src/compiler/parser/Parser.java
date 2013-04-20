@@ -166,9 +166,11 @@ public class Parser {
         case MP_PROGRAM: //2 Program -> Programheading #create_symbol_table(program_identifier_rec) mp_scolon Block mp_period
             out.println("2");
             String scopeName = programHeading();
-            addSymbolTable(scopeName, LabelGenerator.getNextLabel());
+            String branch = LabelGenerator.getNextLabel();
+            SemanticRec rec = new SemanticRec(RecordType.LABEL, branch);
+            addSymbolTable(scopeName, branch);
             match(TokenType.MP_SCOLON);
-            block(scopeName);
+            block(scopeName, new SemanticRec(RecordType.BLOCK, "program"), rec); //sends in the branch lbl and that it is a program block type
 
             match(TokenType.MP_PERIOD);
 
@@ -202,7 +204,7 @@ public class Parser {
         return name;
     }
 
-    public void block(String scopeName)
+    public void block(String scopeName, SemanticRec blockType, SemanticRec branchLbl)
     {
         debug();
         switch (lookAhead.getType()) {
@@ -212,14 +214,19 @@ public class Parser {
         case MP_VAR: //4 Block -> VariableDeclarationPart ProcedureAndFunctionDeclarationPart StatementPart
             out.println("4");
             variableDeclarationPart();
+            if (blockType.getRecType() == RecordType.BLOCK && !blockType.getDatum(0).equalsIgnoreCase("program"))
+            { //for procedure/function blocks it needs to be able to skip around any procedure/function declarations
+                analyzer.gen_specified_label(branchLbl); //places the label that is in the symbol table
+                branchLbl = new SemanticRec(RecordType.LABEL, LabelGenerator.getNextLabel()); //generates an intermediate label to skip over declarations
 
+            }
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, scopeName, ""
                     + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
             //#gen_activation_rec(name_rec)
             analyzer.gen_activation_rec(name_rec);
-
+            analyzer.gen_branch_unconditional_to(branchLbl); //after the activation record branch to where the begin block starts
             procedureAndFunctionDeclarationPart();
-            statementPart();
+            statementPart(branchLbl); //send it the label that will be placed at the begin block
             break;
         default:
             syntaxError("var, begin, function, procedure");
@@ -324,15 +331,16 @@ public class Parser {
     {
         debug();
         String branchLbl = LabelGenerator.getNextLabel();
+        SemanticRec lbl = new SemanticRec(RecordType.LABEL, branchLbl);
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //10 ProcedureAndFunctionDeclarationPart -> ProcedureDeclaration ProcedureAndFunctionDeclarationPart
             out.println("10");
-            procedureDeclaration(branchLbl);
+            procedureDeclaration(lbl);
             procedureAndFunctionDeclarationPart();
             break;
         case MP_FUNCTION: //11 ProcedureAndFunctionDeclarationPart -> FunctionDeclaration ProcedureAndFunctionDeclarationPart
             out.println("11");
-            functionDeclaration(branchLbl);
+            functionDeclaration(lbl);
             procedureAndFunctionDeclarationPart();
             break;
         case MP_BEGIN: //12 ProcedureAndFunctionDeclarationPart -> lambda
@@ -344,7 +352,7 @@ public class Parser {
         }
     }
 
-    public void procedureDeclaration(String branchLbl)
+    public void procedureDeclaration(SemanticRec branchLbl)
     {
         debug();
         switch (lookAhead.getType()) {
@@ -352,7 +360,7 @@ public class Parser {
             out.println("13");
             String procId = procedureHeading(branchLbl);
             match(TokenType.MP_SCOLON);
-            block(procId);
+            block(procId, new SemanticRec(RecordType.BLOCK, "procedure"), branchLbl);
             match(TokenType.MP_SCOLON);
 
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
@@ -368,7 +376,7 @@ public class Parser {
         }
     }
 
-    public void functionDeclaration(String branchLbl)
+    public void functionDeclaration(SemanticRec branchLbl)
     {
         debug();
         switch (lookAhead.getType()) {
@@ -376,7 +384,7 @@ public class Parser {
             out.println("14");
             String funcId = functionHeading(branchLbl);
             match(TokenType.MP_SCOLON);
-            block(funcId);
+            block(funcId, new SemanticRec(RecordType.BLOCK, "function"), branchLbl);
             match(TokenType.MP_SCOLON);
 
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
@@ -392,7 +400,7 @@ public class Parser {
         }
     }
 
-    public String procedureHeading(String branchLbl)
+    public String procedureHeading(SemanticRec branchLbl)
     {
         String procId = null;
         List<ParamSR> parameters;
@@ -411,8 +419,9 @@ public class Parser {
                 attributes.add(param.getAttribute());
                 ids.add(param.getLexeme());
             }
-            symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes, branchLbl);
-            addSymbolTable(procId, branchLbl);
+            symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes,
+                    branchLbl.getDatum(0));
+            addSymbolTable(procId, branchLbl.getDatum(0));
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
             break;
         default:
@@ -421,7 +430,7 @@ public class Parser {
         return procId;
     }
 
-    public String functionHeading(String branchLbl)
+    public String functionHeading(SemanticRec branchLbl)
     {
         String funcId = null;
         List<ParamSR> parameters;
@@ -442,9 +451,10 @@ public class Parser {
             }
             match(TokenType.MP_COLON);
             Type t = type();
-            
-            symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes, branchLbl);
-            addSymbolTable(funcId, branchLbl);
+
+            symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes,
+                    branchLbl.getDatum(0));
+            addSymbolTable(funcId, branchLbl.getDatum(0));
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
             break;
         default:
@@ -495,7 +505,7 @@ public class Parser {
             analyzer.gen_comment("else part");
             analyzer.gen_specified_label(elseLabel);
             optionalElsePart();
-            analyzer.gen_comment("end label");
+            analyzer.gen_comment("if end label");
             analyzer.gen_specified_label(endLabel);
             break;
         default:
@@ -1427,13 +1437,14 @@ public class Parser {
         return parameters;
     }
 
-    public void statementPart()
+    public void statementPart(SemanticRec branchLbl)
     {
         debug();
         switch (lookAhead.getType())
         {
         case MP_BEGIN: //25 StatementPart -> CompoundStatement
             out.println("25");
+            analyzer.gen_specified_label(branchLbl); //place the label at the begin block
             compoundStatement();
             break;
         default:
