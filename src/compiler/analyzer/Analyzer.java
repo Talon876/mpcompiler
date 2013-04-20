@@ -691,9 +691,9 @@ public class Analyzer {
     }
 
     /**
-     * Only allows you to assign to integer identifiers
-     * per http://www.freepascal.org/docs-html/ref/refsu52.html#x145-15500013.2.4
+     * Only allows you to assign to integer identifiers per http://www.freepascal.org/docs-html/ref/refsu52.html#x145-15500013.2.4
      * "The control variable must be an ordinal type, no other types can be used as counters in a loop."
+     * 
      * @param id
      *            {@link SemanticRec} from {@link compiler.parser.Parser#variableIdentifier()} with {@link RecordType#LITERAL} or
      *            {@link RecordType#IDENTIFIER}
@@ -704,7 +704,7 @@ public class Analyzer {
     public void gen_assign_for(SemanticRec id, SemanticRec exp)
     {
         Type idType = getTypeFromSR(id);
-        if(idType == Type.INTEGER)
+        if (idType == Type.INTEGER)
         {
             gen_assign(id, exp);
         }
@@ -713,7 +713,7 @@ public class Analyzer {
             Parser.semanticError("The for loop's control variable must be type Integer");
         }
     }
-    
+
     /**
      * 
      * @param left
@@ -791,8 +791,9 @@ public class Analyzer {
     }
 
     /**
-     * Casts Ids or Literals to the less restrictive type to preserve precision Int, Float the Int is cast to a Float
-     * Based on http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
+     * Casts Ids or Literals to the less restrictive type to preserve precision Int, Float the Int is cast to a Float Based on
+     * http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
+     * 
      * @param left
      *            {@link RecordType#LITERAL} or {@link RecordType#IDENTIFIER}
      * @param right
@@ -917,6 +918,7 @@ public class Analyzer {
 
     /**
      * Always casts to the left's Type
+     * 
      * @param left
      *            {@link RecordType#IDENTIFIER}
      * @param right
@@ -970,9 +972,10 @@ public class Analyzer {
         Type leftType = getTypeFromSR(left);
         Type rightType = getTypeFromSR(right);
 
-        if(leftType != Type.INTEGER || rightType != Type.INTEGER)
+        if (leftType != Type.INTEGER || rightType != Type.INTEGER)
         {
-            Parser.semanticError("div operator only works on integer operands left operand is type: " + leftType + " right operand is type: " + rightType);
+            Parser.semanticError("div operator only works on integer operands left operand is type: " + leftType
+                    + " right operand is type: " + rightType);
         }
     }
 

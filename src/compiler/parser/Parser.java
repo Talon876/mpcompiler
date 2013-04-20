@@ -12,7 +12,9 @@ import compiler.Scanner;
 import compiler.Token;
 import compiler.TokenType;
 import compiler.analyzer.Analyzer;
+import compiler.parser.symbol.Attribute;
 import compiler.parser.symbol.Classification;
+import compiler.parser.symbol.Mode;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
@@ -274,9 +276,11 @@ public class Parser {
             out.println("8");
             //identifierList(), match colon, type()
             List<String> ids = identifierList();
+
             match(TokenType.MP_COLON);
             Type t = type();
-            symboltables.peek().addSymbolsToTable(Classification.VARIABLE, ids, t);
+
+            symboltables.peek().addDataSymbolsToTable(Classification.VARIABLE, ids, new Attribute(t, null));
             break;
         default:
             syntaxError("identifier");
@@ -389,18 +393,25 @@ public class Parser {
     public String procedureHeading()
     {
         String procId = null;
+        List<ParamSR> parameters;
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        List<String> ids = new ArrayList<String>();
         debug();
         switch (lookAhead.getType()) {
         case MP_PROCEDURE: //15 ProcedureHeading -> mp_procedure ProcedureIdentifier #create OptionalFormalParameterList #insert
             out.println("15");
             match(TokenType.MP_PROCEDURE);
 
-            procId = lookAhead.getLexeme();
-            symboltables.peek().addSymbolsToTable(Classification.PROCEDURE, procId, null);
+            procId = procedureIdentifier();
+            parameters = optionalFormalParameterList();
+            for (ParamSR param : parameters)
+            {
+                attributes.add(param.getAttribute());
+                ids.add(param.getLexeme());
+            }
+            symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes);
             addSymbolTable(procId);
-
-            procedureIdentifier();
-            optionalFormalParameterList();
+            symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
             break;
         default:
             syntaxError("procedure");
@@ -411,21 +422,27 @@ public class Parser {
     public String functionHeading()
     {
         String funcId = null;
+        List<ParamSR> parameters;
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        List<String> ids = new ArrayList<String>();
         debug();
         switch (lookAhead.getType()) {
         case MP_FUNCTION: //16 FunctionHeading -> mp_function FunctionIdentifier OptionalFormalParameterList mp_colon Type
             out.println("16");
             match(TokenType.MP_FUNCTION);
 
-            funcId = lookAhead.getLexeme();
-            symboltables.peek().addSymbolsToTable(Classification.FUNCTION, funcId, null);
-            addSymbolTable(funcId);
-
-            functionIdentifier();
-            optionalFormalParameterList();
+            funcId = functionIdentifier();
+            parameters = optionalFormalParameterList();
+            for (ParamSR param : parameters)
+            {
+                attributes.add(param.getAttribute());
+                ids.add(param.getLexeme());
+            }
             match(TokenType.MP_COLON);
             Type t = type();
-            //  ((FunctionRow) symboltables.peek().mostRecentFunctionProcedure).setReturnType(t); //since we just added a FunctionRow, mostRecent will always be a FunctionRow
+            symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes);
+            addSymbolTable(funcId);
+            symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
             break;
         default:
             syntaxError("function");
@@ -433,16 +450,17 @@ public class Parser {
         return funcId;
     }
 
-    public void optionalFormalParameterList()
+    public List<ParamSR> optionalFormalParameterList()
     {
+        List<ParamSR> parameters = new ArrayList<ParamSR>();
         debug();
         switch (lookAhead.getType())
         {
         case MP_LPAREN: //17 OptionalFormalParameterList -> mp_lparen FormalParameterSection FormalParameterSectionTail mp_rparen
             out.println("17");
             match(TokenType.MP_LPAREN);
-            formalParameterSection();
-            formalParameterSectionTail();
+            parameters = formalParameterSection();
+            formalParameterSectionTail(parameters);
             match(TokenType.MP_RPAREN);
             break;
         case MP_SCOLON:
@@ -453,6 +471,7 @@ public class Parser {
         default:
             syntaxError("(, ;, :");
         }
+        return parameters;
     }
 
     public void ifStatement()
@@ -1199,7 +1218,8 @@ public class Parser {
                     //TODO:Literal SR?
                 } else if (factorVar.getClassification() == Classification.FUNCTION) { //TODO:Add function SemanticRecs
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
-                    functionIdentifier();
+                    String id = functionIdentifier();
+                    factor = new SemanticRec(RecordType.LITERAL, factorVar.getType().toString());
                     optionalActualParameterList();
                     //TODO:#gen_func_call(ident, optParam)
                 } else {
@@ -1302,19 +1322,22 @@ public class Parser {
         return lex;
     }
 
-    public void procedureIdentifier() {
+    public String procedureIdentifier() {
+        String procId = null;
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER: //100 ProcedureIdentifier -> mp_identifier
             out.println("100");
+            procId = lookAhead.getLexeme();
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
             syntaxError("identifier");
         }
+        return procId;
     }
 
-    public void formalParameterSectionTail()
+    public void formalParameterSectionTail(List<ParamSR> parameters)
     {
         debug();
         switch (lookAhead.getType())
@@ -1322,8 +1345,8 @@ public class Parser {
         case MP_SCOLON: //19 FormalParameterSectionTail -> mp_scolon FormalParameterSection FormalParameterSectionTail
             out.println("19");
             match(TokenType.MP_SCOLON);
-            formalParameterSection();
-            formalParameterSectionTail();
+            parameters.addAll(formalParameterSection());
+            formalParameterSectionTail(parameters);
             break;
         case MP_RPAREN: //20 FormalParameterSectionTail -> &epsilon
             out.println("20");
@@ -1334,26 +1357,29 @@ public class Parser {
         }
     }
 
-    public void formalParameterSection()
+    public List<ParamSR> formalParameterSection()
     {
+        List<ParamSR> parameters = null;
         debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //21 FormalParameterSection -> ValueParameterSection #insert
             out.println("21");
-            valueParameterSection();
+            parameters = valueParameterSection();
             break;
         case MP_VAR: //22 FormalParameterSection -> VariableParameterSection #insert
             out.println("22");
-            variableParameterSection();
+            parameters = variableParameterSection();
             break;
         default:
             syntaxError("identifier, var");
         }
+        return parameters;
     }
 
-    public void valueParameterSection()
+    public List<ParamSR> valueParameterSection()
     {
+        List<ParamSR> parameters = new ArrayList<ParamSR>();
         debug();
         switch (lookAhead.getType())
         {
@@ -1363,15 +1389,20 @@ public class Parser {
             List<String> ids = identifierList();
             match(TokenType.MP_COLON);
             Type t = type();
-            symboltables.peek().addSymbolsToTable(Classification.PARAMETER, ids, t);
+            for (String id : ids)
+            {
+                parameters.add(new ParamSR(id, new Attribute(t, Mode.VALUE)));
+            }
             break;
         default:
             syntaxError("identifier");
         }
+        return parameters;
     }
 
-    public void variableParameterSection()
+    public List<ParamSR> variableParameterSection()
     {
+        List<ParamSR> parameters = new ArrayList<ParamSR>();
         debug();
         switch (lookAhead.getType())
         {
@@ -1382,11 +1413,15 @@ public class Parser {
             List<String> ids = identifierList();
             match(TokenType.MP_COLON);
             Type t = type();
-            symboltables.peek().addSymbolsToTable(Classification.VARIABLE, ids, t);
+            for (String id : ids)
+            {
+                parameters.add(new ParamSR(id, new Attribute(t, Mode.VARIABLE)));
+            }
             break;
         default:
             syntaxError("var");
         }
+        return parameters;
     }
 
     public void statementPart()
@@ -1716,25 +1751,28 @@ public class Parser {
             }
         }
 
-        break;
+            break;
         default:
             syntaxError("identifier");
         }
     }
 
     //Now starting at Rule line 103
-    public void functionIdentifier()
+    public String functionIdentifier()
     {
+        String funcId = null;
         debug();
         switch (lookAhead.getType())
         {
         case MP_IDENTIFIER: //101 FunctionIdentifier -> mp_identifier
             out.println("101");
+            funcId = lookAhead.getLexeme();
             match(TokenType.MP_IDENTIFIER);
             break;
         default:
             syntaxError("identifier");
         }
+        return funcId;
     }
 
     public void booleanExpression()

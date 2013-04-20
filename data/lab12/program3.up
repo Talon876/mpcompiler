@@ -1,7 +1,7 @@
 program Program3;
   var N: Integer;
   
-  function factorial(var N: Integer): Integer;
+  function factorial(N: Integer): Integer;
     begin      
       if N = 0 then         
           factorial := 1      

@@ -7,19 +7,11 @@ public class FunctionRow extends Row implements ModuleRow {
 
     private List<Attribute> attributes;
 
-    public FunctionRow(String lexeme, Classification classification, Type returnType, Attribute[] attributes) {
+    public FunctionRow(String lexeme, Classification classification, Type returnType, List<Attribute> attributes) {
         super(lexeme, classification);
         setType(returnType);
         this.attributes = new ArrayList<Attribute>();
-        for (Attribute a : attributes) {
-            this.attributes.add(a);
-        }
-    }
-
-    public FunctionRow(String lexeme, Classification classification, Type returnType) {
-        super(lexeme, classification);
-        setType(returnType);
-        attributes = new ArrayList<Attribute>();
+        this.attributes.addAll(attributes);
     }
 
     public void addAttribute(Attribute attribute) {
@@ -41,11 +33,20 @@ public class FunctionRow extends Row implements ModuleRow {
 
     @Override
     public void print() {
-        System.out.print("Function: " + getLexeme() + "\tattributes: ");
+        System.out.print("Function: " + getLexeme() + "\tformal attributes: {");
+        boolean first = true;
         for (Attribute a : attributes)
         {
+            if(!first)
+            {
+                System.out.print(", "); 
+            }
+            else
+            {
+                first = false;
+            }
             a.print();
         }
-        System.out.println("\treturn type: " + getReturnType());
+        System.out.println("}\treturn type: " + getReturnType());
     }
 }

@@ -1,8 +1,8 @@
 package compiler.parser.symbol;
 
 public class Attribute implements Printable {
-    Type type;
-    Mode mode;
+    private Type type;
+    private Mode mode;
 
     public Attribute(Type type, Mode mode)
     {
@@ -10,8 +10,16 @@ public class Attribute implements Printable {
         this.mode = mode;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
     @Override
     public void print() {
-        System.out.print("(" + type.toString() + ", " + mode.toString() + ")");
+        System.out.print("(Type: " + type.toString() + ", Mode: " + mode.toString() + ")");
     }
 }

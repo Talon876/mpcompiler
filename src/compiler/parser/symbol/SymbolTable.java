@@ -13,7 +13,6 @@ public class SymbolTable implements Printable {
     private ArrayList<Row> rows;
     private int nestingLevel;
     private AtomicInteger memSize;
-    public ModuleRow mostRecentFunctionProcedure = null;
 
     public SymbolTable(String scopeName) {
         this.scopeName = scopeName;
@@ -92,6 +91,7 @@ public class SymbolTable implements Printable {
         }
         return false;
     }
+
     @Override
     public void print()
     {
@@ -104,56 +104,48 @@ public class SymbolTable implements Printable {
         }
     }
 
-    public void addSymbolsToTable(Classification c, List<String> ids, Type t) {
-        for (String lex : ids) {
+    public void addDataSymbolsToTable(Classification c, List<String> ids, List<Attribute> attributes) {
+        for (int i = 0; i < ids.size(); i++) {
+            String lex = ids.get(i);
+            Attribute attribute = attributes.get(i);
             switch (c) {
             case VARIABLE:
-                DataRow v = new DataRow(lex, c, t, getAndIncrementTableSize());
+                DataRow v = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
                 insertRow(v);
-
                 break;
             case PARAMETER:
-                DataRow p = new DataRow(lex, c, t, getAndIncrementTableSize());
+                DataRow p = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
                 insertRow(p);
-                /*if (mostRecentFunctionProcedure != null) { //shouldn't have parameters without first hitting a function/procedure anyway
-                    mostRecentFunctionProcedure.addAttribute(new Attribute(t, Mode.PARAMETER));
-                }
-                else
-                {
-                    Parser.semanticError("Parameter without Function/Procedure first");
-                }*/
                 break;
-            case FUNCTION:
-                FunctionRow f = new FunctionRow(lex, c, t);
-                insertRow(f);
-                mostRecentFunctionProcedure = f;
-                break;
-            case PROCEDURE:
-                ProcedureRow proc = new ProcedureRow(lex, c);
-                insertRow(proc);
-                mostRecentFunctionProcedure = proc;
+            default:
                 break;
             }
         }
     }
 
-    public void addSymbolsToTable(Classification c, String lexeme, Type t) {
-        List<String> ids = new ArrayList<String>();
-        ids.add(lexeme);
-        addSymbolsToTable(c, ids, t);
+    public void addDataSymbolsToTable(Classification c, List<String> ids, Attribute attribute)
+    {
+        List<Attribute> attributes = new ArrayList<Attribute>(ids.size());
+        for (int i = 0; i < ids.size(); i++)
+        {
+            attributes.add(attribute);
+        }
+        addDataSymbolsToTable(c, ids, attributes);
     }
 
-    public static void main(String[] args)
-    {
-        SymbolTable table = new SymbolTable("Maintest");
-        table.rows.add(new DataRow("varStuff", Classification.VARIABLE, Type.INTEGER, 0));
-        table.rows.add(new DataRow("paramStuff", Classification.PARAMETER, Type.FLOAT, 1));
-        table.rows.add(new FunctionRow("funcStuff", Classification.FUNCTION, Type.BOOLEAN, new Attribute[] {
-                new Attribute(Type.BOOLEAN, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.PARAMETER) }));
-        table.rows.add(new ProcedureRow("procStuff", Classification.PROCEDURE, new Attribute[] {
-                new Attribute(Type.INTEGER, Mode.VARIABLE), new Attribute(Type.FLOAT, Mode.VARIABLE) }));
-
-        table.print();
+    public void addModuleSymbolsToTable(Classification c, String lexeme, Type returnType, List<Attribute> attributes) {
+        switch (c) {
+        case FUNCTION:
+            FunctionRow f = new FunctionRow(lexeme, c, returnType, attributes);
+            insertRow(f);
+            break;
+        case PROCEDURE:
+            ProcedureRow proc = new ProcedureRow(lexeme, c, attributes);
+            insertRow(proc);
+            break;
+        default:
+            break;
+        }
     }
 
 }
