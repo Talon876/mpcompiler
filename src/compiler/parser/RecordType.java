@@ -44,5 +44,10 @@ public enum RecordType {
     /**
      * Data is ("function", "procedure", "program")
      */
-    BLOCK
+    BLOCK,
+    
+    /**
+     * Data is Type enum, Mode enum
+     */
+    FORMAL_PARAM
 }

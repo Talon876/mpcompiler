@@ -15,7 +15,9 @@ import compiler.analyzer.Analyzer;
 import compiler.analyzer.LabelGenerator;
 import compiler.parser.symbol.Attribute;
 import compiler.parser.symbol.Classification;
+import compiler.parser.symbol.FunctionRow;
 import compiler.parser.symbol.Mode;
+import compiler.parser.symbol.ProcedureRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
@@ -657,7 +659,7 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //58 InitialValue -> OrdinalExpression
             out.println("58");
-            expr = ordinalExpression();
+            expr = ordinalExpression(null);
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
@@ -702,7 +704,7 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //61 FinalValue -> OrdinalExpression
             out.println("61");
-            expr = ordinalExpression();
+            expr = ordinalExpression(null);
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
@@ -716,10 +718,13 @@ public class Parser {
         case MP_IDENTIFIER: //62 ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
             out.println("62");
             String procID = procedureIdentifier();
+            ProcedureRow row = (ProcedureRow) analyzer.findSymbol(procID, Classification.PROCEDURE);
+            FormalParamSR formalParams = new FormalParamSR(procID, row.getAttributes()); //list of all the formal parameters for this procedure
+
             SemanticRec procRec = new SemanticRec(RecordType.IDENTIFIER, Classification.PROCEDURE.toString(), procID);
             analyzer.gen_comment("call to " + procID + " start");
             analyzer.gen_dis_reg_slot(); //reserve space for the register slot
-            optionalActualParameterList();
+            optionalActualParameterList(formalParams);
             analyzer.gen_proc_call(procRec);
             analyzer.gen_comment("call to " + procID + " end");
             break;
@@ -728,7 +733,7 @@ public class Parser {
         }
     }
 
-    public void optionalActualParameterList() {
+    public void optionalActualParameterList(FormalParamSR formalParams) {
         debug();
         switch (lookAhead.getType()) {
         case MP_COMMA:
@@ -761,8 +766,8 @@ public class Parser {
         case MP_LPAREN: //63 OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen
             out.println("63");
             match(TokenType.MP_LPAREN);
-            actualParameter();
-            actualParameterTail();
+            actualParameter(formalParams);
+            actualParameterTail(formalParams);
             match(TokenType.MP_RPAREN);
             break;
         default:
@@ -770,14 +775,14 @@ public class Parser {
         }
     }
 
-    public void actualParameterTail() {
+    public void actualParameterTail(FormalParamSR formalParams) {
         debug();
         switch (lookAhead.getType()) {
         case MP_COMMA: //65 ActualParameterTail -> mp_comma ActualParameter ActualParameterTail
             out.println("65");
             match(TokenType.MP_COMMA);
-            actualParameter();
-            actualParameterTail();
+            actualParameter(formalParams);
+            actualParameterTail(formalParams);
             break;
         case MP_RPAREN: //66 ActualParameterTail -> lambda
             out.println("66");
@@ -788,7 +793,7 @@ public class Parser {
         }
     }
 
-    public void actualParameter() {
+    public void actualParameter(FormalParamSR formalParams) {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
@@ -802,7 +807,16 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //67 ActualParameter -> OrdinalExpression
             out.println("67");
-            ordinalExpression();
+            Attribute formalParam = formalParams.getCurrentAttributeAndIncrement();
+            if (formalParam != null)
+            {
+                SemanticRec exp = ordinalExpression(formalParam);
+                //TODO:type check
+            }
+            else
+            {
+                semanticError("Too many parameters for module " + formalParams.getName());
+            }
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
@@ -811,9 +825,10 @@ public class Parser {
 
     /**
      * 
+     * @param formalParam
      * @return SemanticRec either RecordType.IDENTIFIER or RecordType.LITERAL
      */
-    public SemanticRec expression() {
+    public SemanticRec expression(Attribute formalParam) {
         SemanticRec simpEx;
         SemanticRec opt;
 
@@ -832,7 +847,7 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS: //68 Expression -> SimpleExpression OptionalRelationalPart
             out.println("68");
-            simpEx = simpleExpression();
+            simpEx = simpleExpression(formalParam);
             opt = optionalRelationalPart(simpEx);
             if (opt != null)
             {
@@ -884,7 +899,7 @@ public class Parser {
         case MP_EQUAL: //69 OptionalRelationalPart -> RelationalOperator SimpleExpression
             out.println("69");
             op = relationalOperator();
-            right = simpleExpression();
+            right = simpleExpression(null);
             //#gen_opt_rel_part(left, op, right) //leaves boolean on stack
             analyzer.gen_opt_rel_part(left, op, right);
             opt = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString());
@@ -941,9 +956,10 @@ public class Parser {
 
     /**
      * 
+     * @param formalParam
      * @return SemanticRec RecordType.LITERAL or RecordType.IDENTIFIER
      */
-    public SemanticRec simpleExpression() {
+    public SemanticRec simpleExpression(Attribute formalParam) {
         SemanticRec optSign;
         SemanticRec term;
         SemanticRec tt;
@@ -964,7 +980,7 @@ public class Parser {
         case MP_PLUS: //77 SimpleExpression -> OptionalSign Term TermTail
             out.println("77");
             optSign = optionalSign();
-            term = term();
+            term = term(formalParam);
             //#gen_opt_sim_negate(optSign, term) value on stack
             analyzer.gen_opt_sim_negate(optSign, term);
             tt = termTail(term);
@@ -1016,7 +1032,7 @@ public class Parser {
         case MP_PLUS: //78 TermTail -> AddingOperator Term TermTail
             out.println("78");
             addOp = addingOperator();
-            term = term();
+            term = term(null);
             //#gen_addOp(left, addOp, term)
             analyzer.gen_addOp(left, addOp, term);
             tt = termTail(term);
@@ -1093,9 +1109,10 @@ public class Parser {
 
     /**
      * 
+     * @param formalParam
      * @return SemanticRec RecordType.LITERAL or RecordType.IDENTIFIER
      */
-    public SemanticRec term() {
+    public SemanticRec term(Attribute formalParam) {
         SemanticRec factor;
         SemanticRec ft;
         SemanticRec term = null;
@@ -1111,7 +1128,7 @@ public class Parser {
         case MP_NOT:
         case MP_INTEGER_LIT: //86 Term -> Factor FactorTail
             out.println("86");
-            factor = factor();
+            factor = factor(formalParam);
             ft = factorTail(factor);
             if (ft == null)
             {
@@ -1166,7 +1183,7 @@ public class Parser {
         case MP_TIMES: //87 FactorTail -> MultiplyingOperator Factor FactorTail
             out.println("87");
             mulOp = multiplyingOperator();
-            factor = factor();
+            factor = factor(null);
             //#gen_mulOp(left, mulOp, factor)fa
             factor = analyzer.gen_mulOp(left, mulOp, factor); //result is on stack and type could have been cast
             ft = factorTail(factor);
@@ -1223,9 +1240,10 @@ public class Parser {
 
     /**
      * 
+     * @param formalParam
      * @return SemanticRec RecordType.IDENTIFIER or RecordType.LITERAL
      */
-    public SemanticRec factor() {
+    public SemanticRec factor(Attribute formalParam) {
         SemanticRec factor = null;
 
         debug();
@@ -1238,15 +1256,30 @@ public class Parser {
                     out.println("94"); //94 Factor -> VariableIdentifier
                     String id = variableIdentifier();
                     factor = new SemanticRec(RecordType.IDENTIFIER, factorVar.getClassification().toString(), id);
-                    //#gen_push_id(factor)
-                    factor = analyzer.gen_push_id(factor); //once the Ident has been pushed onto the stack it is now a literal value //TODO:update documentation to reflect that IDENTIFIER isn't returned
+                    if (formalParam != null)
+                    {
+                        SemanticRec formalParamRec = new SemanticRec(RecordType.FORMAL_PARAM, formalParam.getType()
+                                .toString(), formalParam.getMode().toString());
+                        factor = analyzer.gen_push_id(factor, formalParamRec);
+                    }
+                    
+                    else
+                    {
+                      //#gen_push_id(factor)
+                        factor = analyzer.gen_push_id(factor); //once the Ident has been pushed onto the stack it is now a literal value
+                    }
                 } else if (factorVar.getClassification() == Classification.FUNCTION) {
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
                     String id = functionIdentifier();
                     analyzer.gen_comment("call to " + id + " start");
                     analyzer.gen_func_return_slot(); //reserve space for the return value
                     analyzer.gen_dis_reg_slot(); //reserve space for the register slot
-                    optionalActualParameterList();
+
+                    FunctionRow row = (FunctionRow) factorVar;
+                    FormalParamSR formalParams = new FormalParamSR(id, row.getAttributes()); //list of all the formal parameters for this procedure
+
+                    optionalActualParameterList(formalParams);
+
                     //#gen_func_call(funcRec)
                     SemanticRec funcRec = new SemanticRec(RecordType.IDENTIFIER, Classification.FUNCTION.toString(), id);
                     analyzer.gen_func_call(funcRec); //the return value will be on the top of the stack
@@ -1263,13 +1296,13 @@ public class Parser {
         case MP_LPAREN: //96 Factor -> mp_lparen Expression mp_rparen
             out.println("96");
             match(TokenType.MP_LPAREN);
-            factor = expression();
+            factor = expression(null);
             match(TokenType.MP_RPAREN);
             break;
         case MP_NOT: //95 Factor -> mp_not Factor
             out.println("95");
             match(TokenType.MP_NOT);
-            factor = factor();
+            factor = factor(null);
             //#gen_not_bool(factor)
             analyzer.gen_not_bool(factor);
             factor = new SemanticRec(RecordType.LITERAL, Type.BOOLEAN.toString()); //the result is a boolean on the top of the stack
@@ -1735,7 +1768,7 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS:
             out.println("48");
-            SemanticRec exp = ordinalExpression();
+            SemanticRec exp = ordinalExpression(null);
             //#gen_writestmt(writestmt, exp)
             analyzer.gen_writeStmt(writeStmt, exp);
             break;
@@ -1766,7 +1799,7 @@ public class Parser {
                     id = variableIdentifier();
                     varId = new SemanticRec(RecordType.IDENTIFIER, assign.getClassification().toString(), id);
                     match(TokenType.MP_ASSIGN);
-                    exp = expression();
+                    exp = expression(null);
                     //#gen_assign(varId, exp)
                     analyzer.gen_assign(varId, exp, symTable);
                 } else if (assign.getClassification() == Classification.FUNCTION) {
@@ -1775,7 +1808,7 @@ public class Parser {
                     id = functionIdentifier();
                     varId = new SemanticRec(RecordType.IDENTIFIER, assign.getClassification().toString(), id);
                     match(TokenType.MP_ASSIGN);
-                    exp = expression();
+                    exp = expression(null);
                     //#gen_assign(funcId, exp) //pushes the value on the stack
                     analyzer.gen_assign(varId, exp, symTable);
                 } else {
@@ -1824,14 +1857,14 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS:
             out.println("102");
-            expression();
+            expression(null);
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
         }
     }
 
-    public SemanticRec ordinalExpression()
+    public SemanticRec ordinalExpression(Attribute formalParam)
     {
         SemanticRec ord = null;
         debug();
@@ -1848,7 +1881,7 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS:
             out.println("103");
-            ord = expression();
+            ord = expression(formalParam);
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");

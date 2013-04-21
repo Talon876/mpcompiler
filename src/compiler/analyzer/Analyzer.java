@@ -13,6 +13,7 @@ import compiler.parser.SemanticRec;
 import compiler.parser.symbol.Classification;
 import compiler.parser.symbol.DataRow;
 import compiler.parser.symbol.FunctionRow;
+import compiler.parser.symbol.Mode;
 import compiler.parser.symbol.ProcedureRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
@@ -488,6 +489,129 @@ public class Analyzer {
     }
 
     /**
+     * This verifies the 2x2 matrix of formal parameters to actual parameters that is at
+     * https://docs.google.com/document/d/1xooON5JKfxBUgD0lQgwPTXFSnBbg1Tnf2gUfIEjsjRA/edit#bookmark=id.7uphmq724hav It will generate the
+     * push instruction based on that table
+     * 
+     * @param factor
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#IDENTIFIER}
+     * @param formalParamRec
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#FORMAL_PARAM} the factor will be
+     *            used as an actualParameter with the given formalParameter definition
+     */
+    public SemanticRec gen_push_id(SemanticRec factor, SemanticRec formalParamRec)
+    {
+        SemanticRec returnVal = null;
+        DataRow data = (DataRow) getIdRowFromSR(factor); //variableIdentifier is either parameter or variable
+        SymbolTable tbl = findSymbolTable(data);
+        String offset = null;
+
+        Type formalParamType = Type.valueOf(formalParamRec.getDatum(0));
+        Mode formalParamMode = Mode.valueOf(formalParamRec.getDatum(1));
+        Mode actualParamMode = null;
+        Type actualParamType = null;
+        boolean variableClass = false;
+        if (factor.getDatum(0).equalsIgnoreCase(Classification.VARIABLE.toString()))
+        {
+            DataRow row = (DataRow) findSymbol(factor.getDatum(1), Classification.VARIABLE);
+            actualParamMode = Mode.VARIABLE;
+            actualParamType = row.getType();
+            variableClass = true;
+        }
+        else if (factor.getDatum(0).equalsIgnoreCase(Classification.PARAMETER.toString()))
+        {
+            DataRow row = (DataRow) findSymbol(factor.getDatum(1), Classification.PARAMETER);
+            actualParamMode = row.getMode();
+            actualParamType = row.getType();
+            variableClass = false;
+        }
+        if (actualParamMode != null && actualParamType != null)
+        {
+            switch (formalParamMode)
+            {
+            case VALUE:
+                if (actualParamMode == Mode.VALUE)
+                {
+                    offset = generateOffset(tbl, data); //Value, Value you push the value onto the stack
+                    returnVal = new SemanticRec(RecordType.LITERAL, data.getType().toString());
+                    comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: "
+                            + data.getType()
+                            + " offset: " + offset);
+                    push(offset);
+                }
+                else if (actualParamMode == Mode.VARIABLE)
+                {
+                    if (variableClass)
+                    {
+                        offset = generateOffset(tbl, data); //Value, Variable push the contents of the offset
+                        returnVal = new SemanticRec(RecordType.LITERAL, data.getType().toString());
+                        comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: "
+                                + data.getType()
+                                + " offset: " + offset);
+                        push(offset);
+                    }
+                    else
+                    {
+                        offset = "@" + generateOffset(tbl, data); //Value, parameter var mode type the contents are an address you must deference it
+                        returnVal = new SemanticRec(RecordType.LITERAL, data.getType().toString());
+                        comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: "
+                                + data.getType()
+                                + " offset: " + offset);
+                        push(offset);
+                    }
+                }
+                break;
+            case VARIABLE:
+                if (actualParamMode == Mode.VALUE)
+                {
+                    Parser.semanticError("Cannot send Mode Value actual parameter " + factor.getDatum(1)
+                            + " into Mode Variable formal parameter procedure/function");
+                }
+                else if (actualParamMode == Mode.VARIABLE)
+                {
+                    if (formalParamType == actualParamType) //Types have to match exactly
+                    {
+                        if (variableClass)
+                        {
+                            String register = getRegisterFromNL("" + tbl.getNestingLevel());
+                            offset = "" + data.getMemOffset();
+                            returnVal = factor; //It is the address to 
+                            comment("push address class: " + data.getClassification() + " lexeme: " + data.getLexeme()
+                                    + " type: " + data.getType()
+                                    + " offset: " + offset);
+                            push(register);
+                            push("#" + offset);
+                            addStackI(); //Variable, Variable you push the address of the variable onto the stack
+                        }
+                        else //variable parameter the value is an address just push the content across
+                        {
+                            returnVal = factor; //It is the address to 
+                            comment("push address class: " + data.getClassification() + " lexeme: " + data.getLexeme()
+                                    + " type: " + data.getType()
+                                    + " offset: " + offset);
+                            offset = generateOffset(tbl, data); //Variable, Variable you push the value onto the stack
+                            push(offset);
+                        }
+                    }
+                    else
+                    {
+                        Parser.semanticError("Mode Variable actual parameter type " + actualParamType
+                                + " must match Mode Variable formal parameter type " + formalParamType);
+                    }
+                }
+                break;
+            }
+
+        }
+        else
+        {
+            Parser.semanticError("Actual parameter does not have a valid mode");
+        }
+
+        return returnVal;
+    }
+
+    /**
      * 
      * @param lit
      *            {@link SemanticRec} from {@link compiler.parser.Parser#factor()} with {@link RecordType#LITERAL}
@@ -750,8 +874,9 @@ public class Analyzer {
      * @param exp
      *            {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with {@link RecordType#LITERAL} or
      *            {@link RecordType#IDENTIFIER}
-     * @param symbolTable Used for functions only
-     *            {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with {@link RecordType#SYM_TBL}
+     * @param symbolTable
+     *            Used for functions only {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with
+     *            {@link RecordType#SYM_TBL}
      */
     public void gen_assign(SemanticRec id, SemanticRec exp, SemanticRec symbolTable) {
 
