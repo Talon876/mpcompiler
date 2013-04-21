@@ -1047,7 +1047,7 @@ public class Analyzer {
         else
         {
             //invalid cast
-            Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
+            Parser.semanticError("Invalid cast from " + rightType + " to " + leftType);
             return null;
         }
         return arrRec;
@@ -1120,7 +1120,7 @@ public class Analyzer {
         if (!properCastL || !properCastR)
         {
             //invalid cast
-            Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
+            Parser.semanticError("Invalid cast from " + rightType + " to " + leftType);
             return null;
         }
         return arrRec;
@@ -1161,12 +1161,67 @@ public class Analyzer {
         else
         {
             //invalid cast
-            Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
+            Parser.semanticError("Invalid cast from " + rightType + " to " + leftType);
         }
 
         return returnRec;
     }
 
+    
+    public void gen_param_cast(SemanticRec expression, SemanticRec formalParam) 
+    {
+        
+        Type actualParamType = getTypeFromSR(expression);
+        Type formalParamType = Type.valueOf(formalParam.getDatum(0));
+        Mode formalParamMode = Mode.valueOf(formalParam.getDatum(1));
+        if(expression.getRecType() == RecordType.LITERAL)
+        {
+            switch(formalParamMode)
+            {
+            case VALUE:
+                if(actualParamType != formalParamType)
+                {
+                    if ((formalParamType == Type.INTEGER) && actualParamType == Type.FLOAT)
+                    {
+                        //cast to integer
+                        castStackToI();
+                    }
+                    else if (formalParamType == Type.FLOAT && (actualParamType == Type.INTEGER))
+                    {
+                        //cast to float
+                        castStackToF();
+                    }
+                    else
+                    {
+                        //invalid cast
+                        Parser.semanticError("Invalid cast formal param from " + actualParamType + " to " + formalParamType);
+                    }
+                }
+                break;
+            case VARIABLE:
+                Parser.semanticError("Cannot cast value actual parameter into variable formal parameter");
+                break;
+            }
+        }
+        else if(expression.getRecType() == RecordType.IDENTIFIER)
+        {
+
+            switch(formalParamMode)
+            {
+            case VALUE:
+                Parser.semanticError("Programming error: case should be handled in gen_push_id(SemanticRec factor, SemanticRec formalParamRec)");
+                //any identifiers that woulld be sent into value formal parameters would be converted to values at this point
+                break;
+            case VARIABLE:
+                if(actualParamType != formalParamType)
+                {
+                    Parser.semanticError("Actual parameter variable type must match formal parameter variable type");
+                }
+                break;
+            }
+        }
+    }
+    
     /**
      * Checks that both left and right are ints "div" division is only on integer types
      * http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
@@ -1530,5 +1585,7 @@ public class Analyzer {
         }
         return null;
     }
+
+   
 
 }

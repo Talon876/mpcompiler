@@ -812,6 +812,8 @@ public class Parser {
             {
                 SemanticRec exp = ordinalExpression(formalParam);
                 //TODO:type check
+                analyzer.gen_param_cast(exp, new SemanticRec(RecordType.FORMAL_PARAM, formalParam.getType().toString(),
+                        formalParam.getMode().toString()));
             }
             else
             {
@@ -1262,10 +1264,10 @@ public class Parser {
                                 .toString(), formalParam.getMode().toString());
                         factor = analyzer.gen_push_id(factor, formalParamRec);
                     }
-                    
+
                     else
                     {
-                      //#gen_push_id(factor)
+                        //#gen_push_id(factor)
                         factor = analyzer.gen_push_id(factor); //once the Ident has been pushed onto the stack it is now a literal value
                     }
                 } else if (factorVar.getClassification() == Classification.FUNCTION) {
