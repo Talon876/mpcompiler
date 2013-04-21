@@ -6,6 +6,5 @@ public enum Classification {
     FUNCTION,
     PROCEDURE,
     DISREG,
-    RETADDR,
-    FUNCVALUE
+    RETADDR
 }

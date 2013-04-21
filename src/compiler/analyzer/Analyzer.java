@@ -341,6 +341,16 @@ public class Analyzer {
         out.println("br " + label);
     }
 
+    private void ret()
+    {
+        out.println("ret");
+    }
+    
+    private void call(String label)
+    {
+        out.println("call " + label);
+    }
+    
     /**
      * Prints a comment to the VM code (for human readability)
      * 
@@ -359,14 +369,49 @@ public class Analyzer {
      * 
      * @param name_rec
      *            {@link SemanticRec} from {@link compiler.parser.Parser#program()} with {@link RecordType#SYM_TBL}
+     * @param blockType
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#program()} with {@link RecordType#BLOCK}
      */
-    public void gen_activation_rec(SemanticRec name_rec) {
-        comment(name_rec.getDatum(0) + " start"); //; Program1 start
-        String register = getRegisterFromNL(name_rec.getDatum(1));
-        push(register); //push D0
-        String dataSize = name_rec.getDatum(2);
-        move("SP", register); //store stack pointer into nesting register
-        add("SP", "#" + dataSize, "SP"); //reserve needed space
+    public void gen_activation_rec(SemanticRec name_rec, SemanticRec blockType) {
+        if (blockType.getRecType() == RecordType.BLOCK)
+        {
+            String block = blockType.getDatum(0);
+            SymbolTable tbl = findSymbolTable(name_rec.getDatum(0));
+            int variableCount = tbl.getVariableCount();
+            int parameterCount = tbl.getParameterCount();
+            String register = null;
+            String offset = null;
+            switch (block.toLowerCase())
+            {
+            case "program":
+                comment(name_rec.getDatum(0) + " start"); //; Program1 start
+                add("SP", "#1", "SP"); //reserve space for the old register value
+                add("SP", "#" + variableCount, "SP"); //reserveSpace for the variables in the program
+                register = getRegisterFromNL(name_rec.getDatum(1));
+                offset = "-" + (variableCount + 1) + "(SP)";
+                move(register, offset); //moves the current register into the space reserved for the old register
+                sub("SP", "#" + (variableCount + 1), register); //calculates the new register value as the first position in the AR
+                comment("activation end");
+                break;
+            case "procedure":
+            case "function":
+                comment(name_rec.getDatum(0) + " start"); //; Program1 start
+                add("SP", "#" + variableCount, "SP"); //reserveSpace for the variables in the program
+                register = getRegisterFromNL(name_rec.getDatum(1));
+                offset = "-" + (variableCount + parameterCount + 2) + "(SP)"; //one slot for return address, one slot for the old register value
+                move(register, offset); //moves the current register into the space reserved for the old register
+                sub("SP", "#" + (variableCount + parameterCount + 2), register); //calculates the new register value as the first position in the AR
+                comment("activation end");
+                break;
+            default:
+                Parser.semanticError("Block type: " + block + " is not supported");
+                break;
+            }
+        }
+        else
+        {
+            Parser.semanticError("Semantic record " + blockType.getRecType() + " is not supported for recordType.BLOCK parameter");
+        }
     }
 
     /**
@@ -374,16 +419,47 @@ public class Analyzer {
      * @param name_rec
      *            {@link SemanticRec} from {@link compiler.parser.Parser#program()} with {@link RecordType#SYM_TBL}
      */
-    public void gen_deactivation_rec(SemanticRec name_rec)
+    public void gen_prog_deactivation_rec(SemanticRec name_rec)
     {
-
-        String dataSize = name_rec.getDatum(2);
-        sub("SP", "#" + dataSize, "SP");
+        SymbolTable tbl = findSymbolTable(name_rec.getDatum(0));
+        int variableCount = tbl.getVariableCount();
         String register = getRegisterFromNL(name_rec.getDatum(1));
-        pop(register);
+        String offset = "-" + (variableCount + 1) + "(SP)";
+        comment("deactivation start");
+        move(offset, register); //moves the old register value back into the register
+        sub("SP", "#" + (variableCount + 1), "SP"); //removes the variables    
         comment(name_rec.getDatum(0) + " end"); //; Program1 end
     }
 
+    /**
+     * 
+     * @param name_rec
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#program()} with {@link RecordType#SYM_TBL}
+     */
+    public void gen_proc_deactivation_rec(SemanticRec name_rec)
+    {
+        SymbolTable tbl = findSymbolTable(name_rec.getDatum(0));
+        int variableCount = tbl.getVariableCount();
+        int parameterCount = tbl.getParameterCount();
+        String register = getRegisterFromNL(name_rec.getDatum(1));
+        String offset = "-" + (variableCount + parameterCount + 2) + "(SP)"; //one slot for return address, one slot for the old register value
+        comment("deactivation start");
+        move(offset, register); //moves the old register value back into the register
+        sub("SP", "#" + (variableCount), "SP"); //removes the variables
+        ret();
+        comment(name_rec.getDatum(0) + " end"); //; Program1 end
+    }
+    
+    /**
+     * 
+     * @param name_rec
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#program()} with {@link RecordType#SYM_TBL}
+     */
+    public void gen_func_deactivation_rec(SemanticRec name_rec)
+    {
+        gen_proc_deactivation_rec(name_rec);
+    }
+    
     /**
      * 
      */
@@ -860,13 +936,14 @@ public class Analyzer {
         Type rightType = getTypeFromSR(right);
 
         SemanticRec[] arrRec = new SemanticRec[2];
-        boolean properCast = false;
+        boolean properCastL = false;
+        boolean properCastR = false;
 
         if (leftType == Type.FLOAT)
         {
             //no cast needed
             arrRec[0] = left;
-            properCast = true;
+            properCastL = true;
         }
         else if (leftType == Type.INTEGER)
         {
@@ -882,32 +959,32 @@ public class Analyzer {
             add("SP", "#1", "SP"); //move back to original place
             comment("end cast left to float");
             arrRec[0] = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
-            properCast = true;
+            properCastL = true;
         }
         else
         {
-            properCast = false; //left not an Int or Float
+            properCastL = false; //left not an Int or Float
         }
 
         if (rightType == Type.FLOAT)
         {
             //no cast needed
             arrRec[1] = right;
-            properCast = true;
+            properCastR = true;
         }
         else if (rightType == Type.INTEGER)
         {
             //cast right to float
             castStackToF(); //top value
             arrRec[1] = new SemanticRec(RecordType.LITERAL, Type.FLOAT.toString());
-            properCast = true;
+            properCastR = true;
         }
         else
         {
-            properCast = false; //Right type was not an integer or float
+            properCastR = false; //Right type was not an integer or float
         }
 
-        if (!properCast)
+        if (!properCastL || !properCastR)
         {
             //invalid cast
             Parser.semanticError("Invalid cast from " + leftType + " to " + rightType);
@@ -1276,6 +1353,18 @@ public class Analyzer {
         for (int i = symboltables.size() - 1; i >= 0; i--) {
             SymbolTable st = symboltables.get(i);
             boolean s = st.contains(symbol);
+            if (s == true) {
+                return st;
+            }
+        }
+        return null;
+    }
+    
+    public SymbolTable findSymbolTable(String name)
+    {
+        for (int i = symboltables.size() - 1; i >= 0; i--) {
+            SymbolTable st = symboltables.get(i);
+            boolean s = st.getScopeName().equalsIgnoreCase(name);
             if (s == true) {
                 return st;
             }

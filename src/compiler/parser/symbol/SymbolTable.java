@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import compiler.parser.Parser;
-
 public class SymbolTable implements Printable {
 
     private static AtomicInteger NEXT_NESTING_LEVEL = new AtomicInteger();
@@ -14,6 +12,10 @@ public class SymbolTable implements Printable {
     private int nestingLevel;
     private AtomicInteger memSize;
     private String branchLbl;
+    private int variableCount;
+    private int parameterCount;
+    
+    
 
     public SymbolTable(String scopeName, String branch) {
         this.scopeName = scopeName;
@@ -21,6 +23,8 @@ public class SymbolTable implements Printable {
         memSize = new AtomicInteger();
         nestingLevel = getAndIncrementNestingLevel();
         branchLbl = branch;
+        variableCount = 0;
+        parameterCount = 0;
     }
 
     public static int getAndIncrementNestingLevel()
@@ -114,13 +118,21 @@ public class SymbolTable implements Printable {
         for (int i = 0; i < ids.size(); i++) {
             String lex = ids.get(i);
             Attribute attribute = attributes.get(i);
+            DataRow p = null;
             switch (c) {
             case VARIABLE:
+                p = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
+                insertRow(p);
+                variableCount++;
+                break;
             case PARAMETER:
+                p = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
+                insertRow(p);
+                parameterCount++;
+                break;
             case DISREG:
             case RETADDR:
-            case FUNCVALUE:
-                DataRow p = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
+                p = new DataRow(lex, c, attribute.getType(), getAndIncrementTableSize(), attribute.getMode());
                 insertRow(p);
                 break;
             default:
@@ -163,4 +175,11 @@ public class SymbolTable implements Printable {
         }
     }
 
+    public int getVariableCount() {
+        return variableCount;
+    }
+    
+    public int getParameterCount() {
+        return parameterCount;
+    }
 }

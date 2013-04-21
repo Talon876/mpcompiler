@@ -169,10 +169,11 @@ public class Parser {
             String branch = LabelGenerator.getNextLabel();
             SemanticRec rec = new SemanticRec(RecordType.LABEL, branch);
             addSymbolTable(scopeName, branch);
-            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value", new Attribute(Type.STRING, Mode.VALUE));
+            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value",
+                    new Attribute(Type.STRING, Mode.VALUE));
             match(TokenType.MP_SCOLON);
             analyzer.gen_branch_unconditional_to(rec); //after the activation record branch to where the begin block starts
-            
+
             block(scopeName, new SemanticRec(RecordType.BLOCK, "program"), rec); //sends in the branch lbl and that it is a program block type
 
             match(TokenType.MP_PERIOD);
@@ -180,7 +181,7 @@ public class Parser {
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
                     + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
             //#gen_deactivation_rec(name_rec)
-            analyzer.gen_deactivation_rec(name_rec);
+            analyzer.gen_prog_deactivation_rec(name_rec);
             printSymbolTables();
             removeSymbolTable(scopeName);
             //#gen_halt()
@@ -219,11 +220,11 @@ public class Parser {
             variableDeclarationPart();
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, scopeName, ""
                     + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
-            
+
             procedureAndFunctionDeclarationPart();
             analyzer.gen_specified_label(branchLbl); //place the label at the begin block
-            //#gen_activation_rec(name_rec)
-            analyzer.gen_activation_rec(name_rec);
+            //#gen_activation_rec(name_rec, block_type)
+            analyzer.gen_activation_rec(name_rec, blockType);
             statementPart();
             break;
         default:
@@ -364,7 +365,7 @@ public class Parser {
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
                     + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
             //#gen_deactivation_rec(name_rec)
-            analyzer.gen_deactivation_rec(name_rec);
+            analyzer.gen_proc_deactivation_rec(name_rec);
             System.out.println("About to pop procedure table");
             printSymbolTables();
             removeSymbolTable();
@@ -390,7 +391,7 @@ public class Parser {
             SemanticRec name_rec = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
                     + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
             //#gen_deactivation_rec(name_rec)
-            analyzer.gen_deactivation_rec(name_rec);
+            analyzer.gen_func_deactivation_rec(name_rec);
             System.out.println("About to pop function table");
             printSymbolTables();
             removeSymbolTable();
@@ -422,9 +423,11 @@ public class Parser {
             symboltables.peek().addModuleSymbolsToTable(Classification.PROCEDURE, procId, null, attributes,
                     branchLbl.getDatum(0));
             addSymbolTable(procId, branchLbl.getDatum(0));
-            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value", new Attribute(Type.STRING, Mode.VALUE));
+            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value",
+                    new Attribute(Type.STRING, Mode.VALUE));
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
-            symboltables.peek().addDataSymbolToTable(Classification.RETADDR, "Caller's Return Address", new Attribute(Type.STRING, Mode.VALUE));
+            symboltables.peek().addDataSymbolToTable(Classification.RETADDR, "Caller's Return Address",
+                    new Attribute(Type.STRING, Mode.VALUE));
             break;
         default:
             syntaxError("procedure");
@@ -457,10 +460,11 @@ public class Parser {
             symboltables.peek().addModuleSymbolsToTable(Classification.FUNCTION, funcId, t, attributes,
                     branchLbl.getDatum(0));
             addSymbolTable(funcId, branchLbl.getDatum(0));
-            symboltables.peek().addDataSymbolToTable(Classification.FUNCVALUE, "Function Return Value", new Attribute(t, Mode.VARIABLE));
-            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value", new Attribute(Type.STRING, Mode.VALUE));
+            symboltables.peek().addDataSymbolToTable(Classification.DISREG, "Old Display Register Value",
+                    new Attribute(Type.STRING, Mode.VALUE));
             symboltables.peek().addDataSymbolsToTable(Classification.PARAMETER, ids, attributes);
-            symboltables.peek().addDataSymbolToTable(Classification.RETADDR, "Return Address", new Attribute(Type.STRING, Mode.VALUE));
+            symboltables.peek().addDataSymbolToTable(Classification.RETADDR, "Return Address",
+                    new Attribute(Type.STRING, Mode.VALUE));
             break;
         default:
             syntaxError("function");
@@ -527,7 +531,6 @@ public class Parser {
             out.println("52");
             match(TokenType.MP_ELSE);
             statement();
-            // match(TokenType.MP_END); //TODO fix this so that the epsilon isn't ambiguous
             break;
         case MP_UNTIL:
         case MP_SCOLON:
@@ -597,7 +600,6 @@ public class Parser {
             Row controlSymbol = analyzer.findSymbol(controlIdentifier);
             SemanticRec controlId = new SemanticRec(RecordType.IDENTIFIER,
                     controlSymbol.getClassification().toString(), controlIdentifier);
-            //TODO ensure proper casting and see if float for loops are valid
             match(TokenType.MP_ASSIGN);
             SemanticRec exp = initialValue();
             analyzer.gen_comment("assign control variable to initial value");
