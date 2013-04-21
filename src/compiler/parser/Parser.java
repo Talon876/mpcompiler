@@ -397,6 +397,11 @@ public class Parser {
             System.out.println("About to pop function table");
             printSymbolTables();
             removeSymbolTable();
+            FunctionRow row = (FunctionRow) analyzer.findSymbol(funcId, Classification.FUNCTION);
+            if(!row.hasReturnValue())
+            {
+                semanticError("Function " + funcId + " is missing return value assigned to '" + funcId + "'");
+            }
             break;
         default:
             syntaxError("function");

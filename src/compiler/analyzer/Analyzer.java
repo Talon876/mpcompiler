@@ -913,10 +913,12 @@ public class Analyzer {
         }
         else if (leftRow.getClassification() == Classification.FUNCTION)
         {
+            FunctionRow funcRow = (FunctionRow) leftRow;
             String nestingLvl = symbolTable.getDatum(1);
             String register = getRegisterFromNL(nestingLvl);
             String offset = "-1(" + register + ")"; //one above the current old register value is the slot for the return value
             pop(offset);
+            funcRow.setHasReturnValue(true);
         }
         else if (leftRow.getClassification() == Classification.PARAMETER)
         {

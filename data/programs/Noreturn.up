@@ -4,7 +4,6 @@ program NoReturnVoid;
 	function noReturn(var b: float) : Integer
 	begin
 		b:= 15E1;
-		noReturn := b;
 	end
   begin
   b := 0;

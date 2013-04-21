@@ -7,13 +7,15 @@ public class FunctionRow extends Row implements ModuleRow {
 
     private List<Attribute> attributes;
     private String branchLbl;
-    
+    private boolean hasReturnValue;
+     
     public FunctionRow(String lexeme, Classification classification, Type returnType, List<Attribute> attributes, String branchLbl) {
         super(lexeme, classification);
         setType(returnType);
         this.attributes = new ArrayList<Attribute>();
         this.attributes.addAll(attributes);
         this.branchLbl = branchLbl;
+        hasReturnValue = false;
     }
 
     @Override
@@ -36,6 +38,14 @@ public class FunctionRow extends Row implements ModuleRow {
     public List<Attribute> getAttributes()
     {
         return attributes;
+    }
+    
+    public boolean hasReturnValue() {
+        return hasReturnValue;
+    }
+
+    public void setHasReturnValue(boolean hasReturnValue) {
+        this.hasReturnValue = hasReturnValue;
     }
 
     @Override
