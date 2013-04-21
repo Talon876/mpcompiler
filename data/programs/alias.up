@@ -1,0 +1,14 @@
+program Alias;
+   var x : integer;
+
+   procedure p(var a : integer; var b : integer);
+   begin
+      a := a + 1;
+      b := b + 1;
+   end;
+
+begin
+   x := 1;
+   p(x, x);
+   writeln(x);   {is this 2 or 3?}
+end.
