@@ -1231,28 +1231,27 @@ public class Parser {
         debug();
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER:
-            Row factorVar = analyzer.findSymbol(lookAhead.getLexeme()); //TODO: Check if this needs Classification also
+            Row factorVar = analyzer.findSymbol(lookAhead.getLexeme());
             if (factorVar != null) {
                 if (factorVar.getClassification() == Classification.VARIABLE
                         || factorVar.getClassification() == Classification.PARAMETER) {
                     out.println("94"); //94 Factor -> VariableIdentifier
                     String id = variableIdentifier();
                     factor = new SemanticRec(RecordType.IDENTIFIER, factorVar.getClassification().toString(), id);
-                    //#gen_push_id(factor, classification)
+                    //#gen_push_id(factor)
                     factor = analyzer.gen_push_id(factor); //once the Ident has been pushed onto the stack it is now a literal value //TODO:update documentation to reflect that IDENTIFIER isn't returned
-                    //TODO:Literal SR?
-                } else if (factorVar.getClassification() == Classification.FUNCTION) { //TODO:Add function SemanticRecs
+                } else if (factorVar.getClassification() == Classification.FUNCTION) {
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
                     String id = functionIdentifier();
                     analyzer.gen_comment("call to " + id + " start");
                     analyzer.gen_func_return_slot(); //reserve space for the return value
                     analyzer.gen_dis_reg_slot(); //reserve space for the register slot
                     optionalActualParameterList();
-                    //TODO:#gen_func_call(ident, optParam)
+                    //#gen_func_call(funcRec)
                     SemanticRec funcRec = new SemanticRec(RecordType.IDENTIFIER, Classification.FUNCTION.toString(), id);
-                    analyzer.gen_func_call(funcRec);
+                    analyzer.gen_func_call(funcRec); //the return value will be on the top of the stack
                     analyzer.gen_comment("call to " + id + " end");
-                    factor = new SemanticRec(RecordType.LITERAL, factorVar.getType().toString());
+                    factor = new SemanticRec(RecordType.LITERAL, factorVar.getType().toString()); //return value of type is on top of the stack
                 } else {
                     semanticError("Cannot use Procedure identifier '" + lookAhead.getLexeme() + "' as factor.");
                 }
@@ -1750,7 +1749,8 @@ public class Parser {
         String id;
         SemanticRec varId;
         SemanticRec exp;
-
+        SemanticRec symTable = new SemanticRec(RecordType.SYM_TBL, symboltables.peek().getScopeName(), ""
+                + symboltables.peek().getNestingLevel(), "" + symboltables.peek().getTableSize());
         debug();
         switch (lookAhead.getType())
         {
@@ -1768,16 +1768,18 @@ public class Parser {
                     match(TokenType.MP_ASSIGN);
                     exp = expression();
                     //#gen_assign(varId, exp)
-                    analyzer.gen_assign(varId, exp);
+                    analyzer.gen_assign(varId, exp, symTable);
                 } else if (assign.getClassification() == Classification.FUNCTION) {
                     //50 AssignmentStatement -> FunctionIdentifier mp_assign Expression
                     out.println("50");
-                    functionIdentifier();//TODO:functionIdent SemanticRec
+                    id = functionIdentifier();
+                    varId = new SemanticRec(RecordType.IDENTIFIER, assign.getClassification().toString(), id);
                     match(TokenType.MP_ASSIGN);
                     exp = expression();
-                    //TODO:#gen_assign(funcId, exp) //pushes the value on the stack
+                    //#gen_assign(funcId, exp) //pushes the value on the stack
+                    analyzer.gen_assign(varId, exp, symTable);
                 } else {
-                    semanticError("Cannot assign value to Parameter or Procedure");
+                    semanticError("Cannot assign value to Parameter or Procedure"); //TODO: you can assign to parameter
                 }
             }
         }

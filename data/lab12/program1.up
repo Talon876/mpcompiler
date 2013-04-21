@@ -10,5 +10,5 @@ program Program1;
     Read(N);
     Writeln(N);
     Fred;
-    Write(N)
+    Writeln(N)
   end.

@@ -347,12 +347,12 @@ public class Analyzer {
     {
         out.println("ret");
     }
-    
+
     private void call(String label)
     {
         out.println("call " + label);
     }
-    
+
     /**
      * Prints a comment to the VM code (for human readability)
      * 
@@ -412,7 +412,8 @@ public class Analyzer {
         }
         else
         {
-            Parser.semanticError("Semantic record " + blockType.getRecType() + " is not supported for recordType.BLOCK parameter");
+            Parser.semanticError("Semantic record " + blockType.getRecType()
+                    + " is not supported for recordType.BLOCK parameter");
         }
     }
 
@@ -451,7 +452,7 @@ public class Analyzer {
         ret();
         comment(name_rec.getDatum(0) + " end"); //; Program1 end
     }
-    
+
     /**
      * 
      * @param name_rec
@@ -461,7 +462,7 @@ public class Analyzer {
     {
         gen_proc_deactivation_rec(name_rec);
     }
-    
+
     /**
      * 
      */
@@ -749,8 +750,10 @@ public class Analyzer {
      * @param exp
      *            {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with {@link RecordType#LITERAL} or
      *            {@link RecordType#IDENTIFIER}
+     * @param symbolTable Used for functions only
+     *            {@link SemanticRec} from {@link compiler.parser.Parser#expression()} with {@link RecordType#SYM_TBL}
      */
-    public void gen_assign(SemanticRec id, SemanticRec exp) {
+    public void gen_assign(SemanticRec id, SemanticRec exp, SemanticRec symbolTable) {
 
         SemanticRec result = gen_assign_cast(id, exp);
 
@@ -762,9 +765,12 @@ public class Analyzer {
             //rightside is ontop of the stack pop into destination
             pop(leftOffset); //pop into left
         }
-        else if (leftRow.getClassification() == Classification.FUNCTION) //TODO:Function stuff here
+        else if (leftRow.getClassification() == Classification.FUNCTION)
         {
-
+            String nestingLvl = symbolTable.getDatum(1);
+            String register = getRegisterFromNL(nestingLvl);
+            String offset = "-1(" + register + ")"; //one above the current old register value is the slot for the return value
+            pop(offset);
         }
     }
 
@@ -784,7 +790,7 @@ public class Analyzer {
         Type idType = getTypeFromSR(id);
         if (idType == Type.INTEGER)
         {
-            gen_assign(id, exp);
+            gen_assign(id, exp, null);
         }
         else
         {
@@ -1325,7 +1331,7 @@ public class Analyzer {
         int paramNum = row.getAttributes().size();
         sub("SP", "#" + (paramNum + 1), "SP"); //removes parameters and returnValue storage
     }
-    
+
     public void gen_func_call(SemanticRec funcRec) {
         FunctionRow row = (FunctionRow) getIdRowFromSR(funcRec);
         String lbl = row.getBranchLabel();
@@ -1333,16 +1339,17 @@ public class Analyzer {
         int paramNum = row.getAttributes().size();
         sub("SP", "#" + (paramNum + 1), "SP"); //removes parameters and returnValue storage
     }
-    
+
     public void gen_func_return_slot()
     {
         add("SP", "#1", "SP");
     }
-    
+
     public void gen_dis_reg_slot()
     {
         add("SP", "#1", "SP");
     }
+
     /**
      * Generates a comment in the VM file
      * 
@@ -1386,7 +1393,7 @@ public class Analyzer {
         }
         return null;
     }
-    
+
     public SymbolTable findSymbolTable(String name)
     {
         for (int i = symboltables.size() - 1; i >= 0; i--) {
@@ -1399,5 +1406,4 @@ public class Analyzer {
         return null;
     }
 
-    
 }
