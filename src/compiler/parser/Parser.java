@@ -715,8 +715,13 @@ public class Parser {
         switch (lookAhead.getType()) {
         case MP_IDENTIFIER: //62 ProcedureStatement -> ProcedureIdentifier OptionalActualParameterList
             out.println("62");
-            procedureIdentifier();
+            String procID = procedureIdentifier();
+            SemanticRec procRec = new SemanticRec(RecordType.IDENTIFIER, Classification.PROCEDURE.toString(), procID);
+            analyzer.gen_comment("call to " + procID + " start");
+            analyzer.gen_dis_reg_slot(); //reserve space for the register slot
             optionalActualParameterList();
+            analyzer.gen_proc_call(procRec);
+            analyzer.gen_comment("call to " + procID + " end");
             break;
         default:
             syntaxError("identifier");
@@ -1239,9 +1244,15 @@ public class Parser {
                 } else if (factorVar.getClassification() == Classification.FUNCTION) { //TODO:Add function SemanticRecs
                     out.println("97"); //97 Factor -> FunctionIdentifier OptionalActualParameterList
                     String id = functionIdentifier();
-                    factor = new SemanticRec(RecordType.LITERAL, factorVar.getType().toString());
+                    analyzer.gen_comment("call to " + id + " start");
+                    analyzer.gen_func_return_slot(); //reserve space for the return value
+                    analyzer.gen_dis_reg_slot(); //reserve space for the register slot
                     optionalActualParameterList();
                     //TODO:#gen_func_call(ident, optParam)
+                    SemanticRec funcRec = new SemanticRec(RecordType.IDENTIFIER, Classification.FUNCTION.toString(), id);
+                    analyzer.gen_func_call(funcRec);
+                    analyzer.gen_comment("call to " + id + " end");
+                    factor = new SemanticRec(RecordType.LITERAL, factorVar.getType().toString());
                 } else {
                     semanticError("Cannot use Procedure identifier '" + lookAhead.getLexeme() + "' as factor.");
                 }

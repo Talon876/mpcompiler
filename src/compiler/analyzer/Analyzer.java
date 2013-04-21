@@ -12,6 +12,8 @@ import compiler.parser.RecordType;
 import compiler.parser.SemanticRec;
 import compiler.parser.symbol.Classification;
 import compiler.parser.symbol.DataRow;
+import compiler.parser.symbol.FunctionRow;
+import compiler.parser.symbol.ProcedureRow;
 import compiler.parser.symbol.Row;
 import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
@@ -1316,6 +1318,31 @@ public class Analyzer {
         }
     }
 
+    public void gen_proc_call(SemanticRec procRec) {
+        ProcedureRow row = (ProcedureRow) getIdRowFromSR(procRec);
+        String lbl = row.getBranchLabel();
+        call(lbl);
+        int paramNum = row.getAttributes().size();
+        sub("SP", "#" + (paramNum + 1), "SP"); //removes parameters and returnValue storage
+    }
+    
+    public void gen_func_call(SemanticRec funcRec) {
+        FunctionRow row = (FunctionRow) getIdRowFromSR(funcRec);
+        String lbl = row.getBranchLabel();
+        call(lbl);
+        int paramNum = row.getAttributes().size();
+        sub("SP", "#" + (paramNum + 1), "SP"); //removes parameters and returnValue storage
+    }
+    
+    public void gen_func_return_slot()
+    {
+        add("SP", "#1", "SP");
+    }
+    
+    public void gen_dis_reg_slot()
+    {
+        add("SP", "#1", "SP");
+    }
     /**
      * Generates a comment in the VM file
      * 
@@ -1371,4 +1398,6 @@ public class Analyzer {
         }
         return null;
     }
+
+    
 }
