@@ -1795,7 +1795,7 @@ public class Parser {
             if (assign == null) {
                 semanticError("Undeclared identifier " + lookAhead.getLexeme() + " found.");
             } else {
-                if (assign.getClassification() == Classification.VARIABLE) {
+                if (assign.getClassification() == Classification.VARIABLE || assign.getClassification() == Classification.PARAMETER) {
                     //49 AssignmentStatement -> VariableIdentifier mp_assign Expression
                     out.println("49");
                     id = variableIdentifier();
@@ -1814,7 +1814,7 @@ public class Parser {
                     //#gen_assign(funcId, exp) //pushes the value on the stack
                     analyzer.gen_assign(varId, exp, symTable);
                 } else {
-                    semanticError("Cannot assign value to Parameter or Procedure"); //TODO: you can assign to parameter
+                    semanticError("Cannot assign value to a Procedure"); //TODO: you can assign to parameter
                 }
             }
         }

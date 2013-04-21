@@ -1,0 +1,14 @@
+program NoReturnVoid;
+  var a : float;
+  b: integer;
+	function noReturn(var b: float) : Integer
+	begin
+		b:= 15E1;
+		noReturn := b;
+	end
+  begin
+  b := 0;
+  a := 5.0E0;
+  b:= noReturn(a);
+  WriteLn(a, b);
+  end.

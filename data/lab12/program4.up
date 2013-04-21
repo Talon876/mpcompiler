@@ -2,7 +2,7 @@ program Program4;
   var I: Integer;       
       N: Integer;
     
-  procedure Fred(Var A: Integer; Var B: Integer);
+  procedure Fred(A: Integer; Var B: Integer);
     var I: Integer;
     
     procedure Doit;
@@ -11,16 +11,16 @@ program Program4;
         X := 0;        
         I := -5;         
         N := -10;         
-        Write(X, I, N);       
+        Writeln(X, I, N);       
       end;
     
     begin       
       I := 5;       
       A := 10;       
       B := 20;       
-      Write(I, A, B);       
+      Writeln(I, A, B);       
       Doit;       
-      Write(I, A, B);     
+      Writeln(I, A, B);     
     end;
   
   function Why: Integer;
@@ -31,8 +31,8 @@ program Program4;
   begin     
     I := 0;     
     N := 1;     
-    Write(I, N);     
+    Writeln(I, N);     
     Fred(I, N);     
-    Write(I, N);     
-    Write(Why);   
+    Writeln(I, N);     
+    Writeln(Why);   
   end.

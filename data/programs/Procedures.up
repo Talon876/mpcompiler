@@ -13,8 +13,8 @@ program Main;
     begin {Mary}
       read(i);
       Fred(i);
-      {c := c + a; fix parameter assignment}
-      {d := d + 1; fix parameter assignment}
+      c := c + a;
+      d := d + 1;
       writeln(c+d);
       end; {Mary}
 

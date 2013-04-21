@@ -479,12 +479,33 @@ public class Analyzer {
      */
     public SemanticRec gen_push_id(SemanticRec factor)
     {
-        DataRow data = (DataRow) getIdRowFromSR(factor); //variableIdentifier is either parameter or variable
+        Classification factorClass = Classification.valueOf(factor.getDatum(0));
+        DataRow data = (DataRow) getIdRowFromSR(factor);  //variableIdentifier is either parameter or variable
         SymbolTable tbl = findSymbolTable(data);
         String offset = generateOffset(tbl, data);
-        comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
-                + " offset: " + offset);
-        push(offset);
+        if(factorClass == Classification.VARIABLE)
+        {
+            comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+                    + " offset: " + offset);
+            push(offset);
+        }
+        else if(factorClass == Classification.PARAMETER)
+        {
+            Mode paramMode = data.getMode();
+           
+            if(paramMode == Mode.VALUE)
+            {
+                comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+                        + " offset: " + offset);
+                push(offset);
+            }
+            else if(paramMode == Mode.VARIABLE)
+            {
+                comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+                        + " offset: " + offset);
+                push("@" + offset); //dereference the content and push that
+            }
+        }
         return new SemanticRec(RecordType.LITERAL, data.getType().toString());
     }
 
@@ -897,6 +918,23 @@ public class Analyzer {
             String offset = "-1(" + register + ")"; //one above the current old register value is the slot for the return value
             pop(offset);
         }
+        else if (leftRow.getClassification() == Classification.PARAMETER)
+        {
+            SymbolTable leftTable = findSymbolTable(leftRow);
+            DataRow row = (DataRow) leftRow;
+            Mode paramMode = row.getMode();
+            String offset = null;
+            if (paramMode == Mode.VALUE)
+            {
+                offset = generateOffset(leftTable, row);
+                pop(offset); //if it is a value parameter treat it like a normal Variable for that scope
+            }
+            else if (paramMode == Mode.VARIABLE)
+            {
+                offset = "@" + generateOffset(leftTable, row);
+                pop(offset); //if it is a variable parameter dereference the local parameter to store at the parent address contained in it
+            }
+        }
     }
 
     /**
@@ -1167,19 +1205,18 @@ public class Analyzer {
         return returnRec;
     }
 
-    
-    public void gen_param_cast(SemanticRec expression, SemanticRec formalParam) 
+    public void gen_param_cast(SemanticRec expression, SemanticRec formalParam)
     {
-        
+
         Type actualParamType = getTypeFromSR(expression);
         Type formalParamType = Type.valueOf(formalParam.getDatum(0));
         Mode formalParamMode = Mode.valueOf(formalParam.getDatum(1));
-        if(expression.getRecType() == RecordType.LITERAL)
+        if (expression.getRecType() == RecordType.LITERAL)
         {
-            switch(formalParamMode)
+            switch (formalParamMode)
             {
             case VALUE:
-                if(actualParamType != formalParamType)
+                if (actualParamType != formalParamType)
                 {
                     if ((formalParamType == Type.INTEGER) && actualParamType == Type.FLOAT)
                     {
@@ -1194,7 +1231,8 @@ public class Analyzer {
                     else
                     {
                         //invalid cast
-                        Parser.semanticError("Invalid cast formal param from " + actualParamType + " to " + formalParamType);
+                        Parser.semanticError("Invalid cast formal param from " + actualParamType + " to "
+                                + formalParamType);
                     }
                 }
                 break;
@@ -1203,17 +1241,17 @@ public class Analyzer {
                 break;
             }
         }
-        else if(expression.getRecType() == RecordType.IDENTIFIER)
+        else if (expression.getRecType() == RecordType.IDENTIFIER)
         {
 
-            switch(formalParamMode)
+            switch (formalParamMode)
             {
             case VALUE:
                 Parser.semanticError("Programming error: case should be handled in gen_push_id(SemanticRec factor, SemanticRec formalParamRec)");
                 //any identifiers that woulld be sent into value formal parameters would be converted to values at this point
                 break;
             case VARIABLE:
-                if(actualParamType != formalParamType)
+                if (actualParamType != formalParamType)
                 {
                     Parser.semanticError("Actual parameter variable type must match formal parameter variable type");
                 }
@@ -1221,7 +1259,7 @@ public class Analyzer {
             }
         }
     }
-    
+
     /**
      * Checks that both left and right are ints "div" division is only on integer types
      * http://www.freepascal.org/docs-html/ref/refsu39.html#x129-13900012.8.1
@@ -1585,7 +1623,5 @@ public class Analyzer {
         }
         return null;
     }
-
-   
 
 }
