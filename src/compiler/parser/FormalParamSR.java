@@ -10,7 +10,7 @@ public class FormalParamSR {
     private List<Attribute> attributes;
     private AtomicInteger pointer;
     private String funcName;
-    
+
     public FormalParamSR(String name, List<Attribute> attributes)
     {
         pointer = new AtomicInteger(0);
@@ -20,7 +20,7 @@ public class FormalParamSR {
     }
 
     public Attribute getCurrentAttribute() {
-        if(pointer.get() < attributes.size())
+        if (pointer.get() < attributes.size())
         {
             return attributes.get(pointer.get());
         }
@@ -29,9 +29,9 @@ public class FormalParamSR {
             return null;
         }
     }
-    
+
     public Attribute getCurrentAttributeAndIncrement() {
-        if(pointer.get() < attributes.size())
+        if (pointer.get() < attributes.size())
         {
             return attributes.get(pointer.getAndIncrement());
         }
@@ -40,7 +40,17 @@ public class FormalParamSR {
             return null;
         }
     }
-    
+
+    /**
+     * Checks if after incrementing all the actual parameters it is exactly equal to the formal parameter list size
+     * 
+     * @return true if the pointer is the same as the size
+     */
+    public boolean isCorrectParamCount()
+    {
+        return pointer.get() == attributes.size();
+    }
+
     public String getName()
     {
         return funcName;

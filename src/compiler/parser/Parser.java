@@ -398,7 +398,7 @@ public class Parser {
             printSymbolTables();
             removeSymbolTable();
             FunctionRow row = (FunctionRow) analyzer.findSymbol(funcId, Classification.FUNCTION);
-            if(!row.hasReturnValue())
+            if (!row.hasReturnValue())
             {
                 semanticError("Function " + funcId + " is missing return value assigned to '" + funcId + "'");
             }
@@ -767,12 +767,23 @@ public class Parser {
         case MP_END: //64 OptionalActualParameterList -> lambda
             out.println("64");
             lambda();
+            if (!formalParams.isCorrectParamCount())
+            {
+                semanticError("Invalid call: Actual parameter count for " + formalParams.getName()
+                        + " is not equal to the formal parameter count");
+            }
             break;
         case MP_LPAREN: //63 OptionalActualParameterList -> mp_lparen ActualParameter ActualParameterTail mp_rparen
             out.println("63");
             match(TokenType.MP_LPAREN);
             actualParameter(formalParams);
             actualParameterTail(formalParams);
+            
+            if (!formalParams.isCorrectParamCount())
+            {
+                semanticError("Invalid call: Actual parameter count for " + formalParams.getName()
+                        + " is not equal to the formal parameter count");
+            }
             match(TokenType.MP_RPAREN);
             break;
         default:
@@ -1800,7 +1811,8 @@ public class Parser {
             if (assign == null) {
                 semanticError("Undeclared identifier " + lookAhead.getLexeme() + " found.");
             } else {
-                if (assign.getClassification() == Classification.VARIABLE || assign.getClassification() == Classification.PARAMETER) {
+                if (assign.getClassification() == Classification.VARIABLE
+                        || assign.getClassification() == Classification.PARAMETER) {
                     //49 AssignmentStatement -> VariableIdentifier mp_assign Expression
                     out.println("49");
                     id = variableIdentifier();
