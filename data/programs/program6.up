@@ -1,9 +1,9 @@
 program mainProgram6; 
 var train, tree, speaker, couch, ba_con: Integer;
-	hello, goodbye: Boolean;
-	crazy: String;
-	omg, nom: Float;
-{
+    hello, goodbye: Boolean;
+    crazy: String;
+    omg, nom: Float;
+
     procedure doMath(x1, y1, x2, y2 : Integer);
     begin
         tree := x1 + x2 * y2 div y1;
@@ -12,13 +12,15 @@ var train, tree, speaker, couch, ba_con: Integer;
 
     function alpha:float;
     var first: integer; second: float;
-	    function alphaprime:integer;
-	    var alphafirst: integer;
-	    	begin
-	    		alphafirst := -nom;
-	    	end;
+        function alphaprime:integer;
+        var alphafirst: integer;
+            begin
+                alphafirst := -nom;
+                alphaprime := alphaprime;
+            end;
     begin
         speaker := first - second;
+        alpha := first;
     end;
 
     function beta(var arg1, arg2:float; arg3:boolean):integer;
@@ -28,7 +30,8 @@ var train, tree, speaker, couch, ba_con: Integer;
             omg := 5.5e1;
         end;
     begin
-        {things(true, false); procedure calls currently not implemented}
+        beta := 1;
+        things(true, false);
     end;
 
     function gamma(a1, a2: boolean):float;
@@ -36,16 +39,15 @@ var train, tree, speaker, couch, ba_con: Integer;
     begin
         gamma := omg;
     end;
-functions/procedures not implemented yet... needs labels to jump over the function definitions
-}
+
 begin
-	hello := true;
-	goodbye :=false;
-	crazy := 'crazy train';
-	omg := 2E10;
-    {ba_con := beta(omg, nom); assignment from procedures is currently not implemented}
+    hello := true;
+    goodbye :=false;
+    crazy := 'crazy train';
+    omg := 2E10;
+    ba_con := beta(omg, nom);
     goodbye := not goodbye;
     Write(crazy, ' , ', goodbye, ' , ', hello, ' , ', omg);
     WriteLN(' ');
-	WriteLN(crazy, goodbye, hello, omg);
+    WriteLN(crazy, goodbye, hello, omg);
 end.
