@@ -1,0 +1,15 @@
+program self;
+    var a, b, c : integer;
+    
+    function doStuff : integer;
+    begin
+        doStuff := c;
+    end;
+begin
+	a := 1;
+	b := 2;
+	c := 3;
+	writeln(a,b,c);
+	a := doStuff;
+	writeln(a,b,c);
+end.
