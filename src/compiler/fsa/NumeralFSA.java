@@ -183,7 +183,7 @@ public class NumeralFSA implements FSA {
                     type = TokenType.MP_INTEGER_LIT;
                     break;
                 case 7:
-                    type = TokenType.MP_FIXED_LIT;
+                    type = TokenType.MP_FLOAT_LIT;
                     break;
                 case 5:
                     type = TokenType.MP_FLOAT_LIT;
