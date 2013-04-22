@@ -431,7 +431,7 @@ public class Analyzer {
         String offset = "-" + (variableCount + 1) + "(SP)";
         comment("deactivation start");
         move(offset, register); //moves the old register value back into the register
-        sub("SP", "#" + (variableCount + 1), "SP"); //removes the variables    
+        sub("SP", "#" + (variableCount + 1), "SP"); //removes the variables
         comment(name_rec.getDatum(0) + " end"); //; Program1 end
     }
 
@@ -492,7 +492,7 @@ public class Analyzer {
         else if(factorClass == Classification.PARAMETER)
         {
             Mode paramMode = data.getMode();
-           
+
             if(paramMode == Mode.VALUE)
             {
                 comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
@@ -596,7 +596,7 @@ public class Analyzer {
                         {
                             String register = getRegisterFromNL("" + tbl.getNestingLevel());
                             offset = "" + data.getMemOffset();
-                            returnVal = factor; //It is the address to 
+                            returnVal = factor; //It is the address to
                             comment("push address class: " + data.getClassification() + " lexeme: " + data.getLexeme()
                                     + " type: " + data.getType()
                                     + " offset: " + offset);
@@ -606,7 +606,7 @@ public class Analyzer {
                         }
                         else //variable parameter the value is an address just push the content across
                         {
-                            returnVal = factor; //It is the address to 
+                            returnVal = factor; //It is the address to
                             comment("push address class: " + data.getClassification() + " lexeme: " + data.getLexeme()
                                     + " type: " + data.getType()
                                     + " offset: " + offset);
@@ -645,7 +645,7 @@ public class Analyzer {
         switch (tt)
         {
         case STRING:
-            push("#\"" + lexeme + "\"");
+            push("#\"" + lexeme.replaceAll("\\\\(?![nrtv])", "\\\\\\\\") + "\"");
             break;
         case BOOLEAN:
             if (lexeme.equalsIgnoreCase("true"))

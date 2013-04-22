@@ -42,9 +42,11 @@ public class Scanner {
             br.close();
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("File not found: " + e.getMessage());
+            System.exit(1);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
+            System.exit(1);
         }
     }
 
