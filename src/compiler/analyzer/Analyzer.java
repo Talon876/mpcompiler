@@ -1033,6 +1033,7 @@ public class Analyzer {
                 default:
                     Parser.semanticError(relOp + " is not a relational operator for type " + resultType);
                 }
+                break;
             default:
                 Parser.semanticError(resultType + " does not have relational operators");
             }
