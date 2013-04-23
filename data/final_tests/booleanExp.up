@@ -1,0 +1,10 @@
+program booleanExp;
+var test: boolean;
+test2: integer;
+begin
+	test := true;
+	while test2 do
+	begin
+		test := false;
+	end;
+end.

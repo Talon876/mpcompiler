@@ -724,11 +724,12 @@ public class Parser {
             out.println("62");
             String procID = procedureIdentifier();
             ProcedureRow row = (ProcedureRow) analyzer.findSymbol(procID, Classification.PROCEDURE);
-            if(row != null)
+            if (row != null)
             {
                 FormalParamSR formalParams = new FormalParamSR(procID, row.getAttributes()); //list of all the formal parameters for this procedure
-    
-                SemanticRec procRec = new SemanticRec(RecordType.IDENTIFIER, Classification.PROCEDURE.toString(), procID);
+
+                SemanticRec procRec = new SemanticRec(RecordType.IDENTIFIER, Classification.PROCEDURE.toString(),
+                        procID);
                 analyzer.gen_comment("call to " + procID + " start");
                 analyzer.gen_dis_reg_slot(); //reserve space for the register slot
                 optionalActualParameterList(formalParams);
@@ -785,7 +786,7 @@ public class Parser {
             match(TokenType.MP_LPAREN);
             actualParameter(formalParams);
             actualParameterTail(formalParams);
-            
+
             if (!formalParams.isCorrectParamCount())
             {
                 semanticError("Invalid call: Actual parameter count for " + formalParams.getName()
@@ -1883,7 +1884,24 @@ public class Parser {
         case MP_MINUS:
         case MP_PLUS:
             out.println("102");
-            expression(null);
+            SemanticRec rec = expression(null);
+            if (rec.getRecType() == RecordType.LITERAL)
+            {
+                Type type = Type.valueOf(rec.getDatum(0));
+                if (type != Type.BOOLEAN)
+                {
+                    semanticError("BooleanExpression requires a boolean literal type found type " + type.toString());
+                }
+            }
+            else if (rec.getRecType() == RecordType.IDENTIFIER) //shouldn't be an Identifier here but just in case
+            {
+                Type type = analyzer.findSymbol(rec.getDatum(1), Classification.valueOf(rec.getDatum(0))).getType();
+                if (type != Type.BOOLEAN)
+                {
+                    semanticError("BooleanExpression requires a boolean identifier type found " + rec.getDatum(1)
+                            + " with type " + type.toString());
+                }
+            }
             break;
         default:
             syntaxError("identifier, false, true, String, Float, (, not, Integer, -, +");
