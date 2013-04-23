@@ -724,14 +724,21 @@ public class Parser {
             out.println("62");
             String procID = procedureIdentifier();
             ProcedureRow row = (ProcedureRow) analyzer.findSymbol(procID, Classification.PROCEDURE);
-            FormalParamSR formalParams = new FormalParamSR(procID, row.getAttributes()); //list of all the formal parameters for this procedure
-
-            SemanticRec procRec = new SemanticRec(RecordType.IDENTIFIER, Classification.PROCEDURE.toString(), procID);
-            analyzer.gen_comment("call to " + procID + " start");
-            analyzer.gen_dis_reg_slot(); //reserve space for the register slot
-            optionalActualParameterList(formalParams);
-            analyzer.gen_proc_call(procRec);
-            analyzer.gen_comment("call to " + procID + " end");
+            if(row != null)
+            {
+                FormalParamSR formalParams = new FormalParamSR(procID, row.getAttributes()); //list of all the formal parameters for this procedure
+    
+                SemanticRec procRec = new SemanticRec(RecordType.IDENTIFIER, Classification.PROCEDURE.toString(), procID);
+                analyzer.gen_comment("call to " + procID + " start");
+                analyzer.gen_dis_reg_slot(); //reserve space for the register slot
+                optionalActualParameterList(formalParams);
+                analyzer.gen_proc_call(procRec);
+                analyzer.gen_comment("call to " + procID + " end");
+            }
+            else
+            {
+                semanticError(procID + " is not a Procedure that is currently in scope");
+            }
             break;
         default:
             syntaxError("identifier");
