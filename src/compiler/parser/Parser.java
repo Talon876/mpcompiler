@@ -23,7 +23,7 @@ import compiler.parser.symbol.SymbolTable;
 import compiler.parser.symbol.Type;
 
 public class Parser {
-    private static final boolean DEBUG = !!false;
+    private static final boolean DEBUG = false;
 
     Token lookAhead;
     Token lookAhead2;
@@ -1709,7 +1709,8 @@ public class Parser {
         case MP_IDENTIFIER: //44 ReadParameter -> VariableIdentifier
             out.println("44");
             String id = variableIdentifier();
-            readID = new SemanticRec(RecordType.IDENTIFIER, Classification.VARIABLE.toString(), id);
+            Row varSym = analyzer.findSymbol(id);
+            readID = new SemanticRec(RecordType.IDENTIFIER, varSym.getClassification().toString(), id);
             //#gen_readStmt(readID)
             analyzer.gen_readStmt(readID);
             break;
@@ -1844,7 +1845,7 @@ public class Parser {
             }
         }
 
-            break;
+        break;
         default:
             syntaxError("identifier");
         }
