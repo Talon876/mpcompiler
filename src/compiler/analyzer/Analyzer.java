@@ -480,28 +480,31 @@ public class Analyzer {
     public SemanticRec gen_push_id(SemanticRec factor)
     {
         Classification factorClass = Classification.valueOf(factor.getDatum(0));
-        DataRow data = (DataRow) getIdRowFromSR(factor);  //variableIdentifier is either parameter or variable
+        DataRow data = (DataRow) getIdRowFromSR(factor); //variableIdentifier is either parameter or variable
         SymbolTable tbl = findSymbolTable(data);
         String offset = generateOffset(tbl, data);
-        if(factorClass == Classification.VARIABLE)
+        if (factorClass == Classification.VARIABLE)
         {
-            comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+            comment("push class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: "
+                    + data.getType()
                     + " offset: " + offset);
             push(offset);
         }
-        else if(factorClass == Classification.PARAMETER)
+        else if (factorClass == Classification.PARAMETER)
         {
             Mode paramMode = data.getMode();
 
-            if(paramMode == Mode.VALUE)
+            if (paramMode == Mode.VALUE)
             {
-                comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+                comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme()
+                        + " type: " + data.getType()
                         + " offset: " + offset);
                 push(offset);
             }
-            else if(paramMode == Mode.VARIABLE)
+            else if (paramMode == Mode.VARIABLE)
             {
-                comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme() + " type: " + data.getType()
+                comment("push parameter class: " + data.getClassification() + " lexeme: " + data.getLexeme()
+                        + " type: " + data.getType()
                         + " offset: " + offset);
                 push("@" + offset); //dereference the content and push that
             }
@@ -1298,12 +1301,17 @@ public class Analyzer {
         }
     }
 
-    public void gen_readStmt(SemanticRec readStmt)
+    public void gen_readStmt(SemanticRec readStmt, boolean isVar)
     {
         DataRow row = (DataRow) getIdRowFromSR(readStmt);
         Type type = row.getType();
         SymbolTable table = findSymbolTable(row);
-        String offset = generateOffset(table, row);
+        String offset = "";
+        if (isVar) {
+            offset = generateOffset(table, row);
+        } else {
+            offset = "@" + generateOffset(table, row);
+        }
 
         switch (type)
         {

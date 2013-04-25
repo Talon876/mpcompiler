@@ -15,6 +15,7 @@ import compiler.analyzer.Analyzer;
 import compiler.analyzer.LabelGenerator;
 import compiler.parser.symbol.Attribute;
 import compiler.parser.symbol.Classification;
+import compiler.parser.symbol.DataRow;
 import compiler.parser.symbol.FunctionRow;
 import compiler.parser.symbol.Mode;
 import compiler.parser.symbol.ProcedureRow;
@@ -1712,7 +1713,17 @@ public class Parser {
             Row varSym = analyzer.findSymbol(id);
             readID = new SemanticRec(RecordType.IDENTIFIER, varSym.getClassification().toString(), id);
             //#gen_readStmt(readID)
-            analyzer.gen_readStmt(readID);
+            if (varSym.getClassification() == Classification.VARIABLE) {
+                analyzer.gen_readStmt(readID, true);
+            } else {
+                DataRow r = (DataRow) varSym;
+                if (r.getMode() == Mode.VARIABLE) {
+                    analyzer.gen_readStmt(readID, false);
+                } else {
+                    analyzer.gen_readStmt(readID, true);
+                }
+            }
+
             break;
         default:
             syntaxError("identifier");
